@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PureGeoGems — Ručně vyráběné šperky</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<style>
+:root {
+  --white: #fffaf8; --blush: #f9e8e4; --rose: #f0c4ba;
+  --dusty-rose: #e8a898; --deep-rose: #c97b6e; --petal: #fdf3f0;
+  --text: #3d2a26; --text-light: #8a6460; --green: #5a8a6a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Jost',sans-serif; background:var(--white); color:var(--text); overflow-x:hidden; }
+
+/* ── NAV ── */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 48px; background:rgba(255,250,248,0.96); backdrop-filter:blur(8px); border-bottom:1px solid var(--rose); }
+.nav-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:400; letter-spacing:.08em; color:var(--text); text-decoration:none; }
+.nav-logo span { color:var(--deep-rose); }
+.nav-links { display:flex; gap:36px; list-style:none; }
+.nav-links a { text-decoration:none; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-light); transition:color .2s; }
+.nav-links a:hover { color:var(--deep-rose); }
+.nav-cart { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-light); background:none; border:none; transition:color .2s; }
+.nav-cart:hover { color:var(--deep-rose); }
+.cart-badge { background:var(--deep-rose); color:white; border-radius:50%; width:18px; height:18px; font-size:.65rem; display:flex; align-items:center; justify-content:center; }
+
+/* ── HERO ── */
+.hero { height:100vh; min-height:500px; display:grid; grid-template-columns:1fr 1fr; padding-top:72px; }
+.hero-left { display:flex; flex-direction:column; justify-content:center; padding:48px 56px 48px 48px; }
+.hero-tag { font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--deep-rose); margin-bottom:24px; }
+.hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(3rem,5vw,5.2rem); font-weight:300; line-height:1.1; margin-bottom:28px; }
+.hero-title em { font-style:italic; color:var(--deep-rose); }
+.hero-desc { font-size:.95rem; line-height:1.8; color:var(--text-light); max-width:400px; margin-bottom:48px; font-weight:300; }
+.hero-btns { display:flex; gap:16px; flex-wrap:wrap; }
+.btn-primary { background:var(--deep-rose); color:white; border:none; padding:14px 36px; font-family:'Jost',sans-serif; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; border-radius:100px; transition:background .2s; text-decoration:none; display:inline-block; }
+.btn-primary:hover { background:var(--text); }
+.btn-ghost { background:transparent; color:var(--text); border:1px solid var(--dusty-rose); padding:14px 36px; font-family:'Jost',sans-serif; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; border-radius:100px; transition:background .2s; text-decoration:none; display:inline-block; }
+.btn-ghost:hover { background:var(--blush); }
+.hero-right { position:relative; overflow:hidden; background:var(--blush); }
+.hero-right img { width:100%; height:100%; object-fit:cover; display:block; }
+
+.hero-video { width:100%; height:100%; object-fit:cover; display:block; }
+
+.floating-badge { position:absolute; bottom:40px; left:-20px; background:white; border-radius:14px; padding:14px 22px; box-shadow:0 8px 32px rgba(0,0,0,.1); display:flex; align-items:center; gap:12px; }
+.floating-badge-icon { width:38px; height:38px; background:var(--blush); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+.floating-badge-text strong { display:block; font-size:.85rem; }
+.floating-badge-text span { font-size:.72rem; color:var(--text-light); }
+
+
+/* ── SECTIONS ── */
+.section-header { text-align:center; margin-bottom:52px; }
+.section-tag { font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--deep-rose); margin-bottom:12px; display:block; }
+.section-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3rem); font-weight:300; line-height:1.2; }
+.section-title em { font-style:italic; color:var(--deep-rose); }
+
+/* ── CATEGORIES ── */
+.categories { padding:80px 48px; }
+.cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.cat-card { border-radius:20px; overflow:hidden; position:relative; cursor:pointer; aspect-ratio:3/4; transition:transform .3s, box-shadow .3s; }
+.cat-card:hover { transform:translateY(-6px); box-shadow:0 20px 48px rgba(201,123,110,.22); }
+.cat-card:nth-child(2) { margin-top:32px; }
+.cat-card img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s; }
+.cat-card:hover img { transform:scale(1.06); }
+.cat-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(61,42,38,.82) 0%, rgba(61,42,38,.1) 55%, transparent 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:28px 24px; transition:background .3s; }
+.cat-card:hover .cat-overlay { background:linear-gradient(to top, rgba(61,42,38,.9) 0%, rgba(61,42,38,.3) 60%, transparent 100%); }
+.cat-name { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:400; color:white; margin-bottom:4px; }
+.cat-count { font-size:.73rem; color:rgba(255,255,255,.7); letter-spacing:.08em; margin-bottom:10px; }
+.cat-desc { font-size:.78rem; color:rgba(255,255,255,.0); line-height:1.5; font-weight:300; transition:color .3s, max-height .3s; max-height:0; overflow:hidden; }
+.cat-card:hover .cat-desc { color:rgba(255,255,255,.85); max-height:60px; }
+.cat-btn { display:inline-flex; align-items:center; gap:8px; background:var(--deep-rose); color:white; border:none; padding:8px 18px; border-radius:100px; font-family:'Jost',sans-serif; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; margin-top:12px; opacity:0; transform:translateY(6px); transition:opacity .3s, transform .3s; }
+.cat-card:hover .cat-btn { opacity:1; transform:translateY(0); }
+.cat-badge { position:absolute; top:14px; left:14px; background:rgba(255,255,255,.9); color:var(--deep-rose); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; padding:4px 12px; border-radius:100px; }
+
+/* ── PRODUCTS ── */
+.products { padding:128px 48px; background:var(--petal); }
+.products-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:52px; }
+.products-header .section-header { text-align:left; margin-bottom:0; }
+.filter-tabs { display:flex; gap:8px; }
+.filter-tab { padding:8px 20px; border-radius:100px; border:1px solid var(--rose); background:transparent; font-family:'Jost',sans-serif; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s; color:var(--text-light); }
+.filter-tab.active,.filter-tab:hover { background:var(--deep-rose); color:white; border-color:var(--deep-rose); }
+.products-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+.product-card { background:white; border-radius:14px; overflow:hidden; transition:box-shadow .2s; cursor:pointer; }
+.product-card:hover { box-shadow:0 8px 28px rgba(201,123,110,.14); }
+.product-img { aspect-ratio:1; background:var(--blush); position:relative; overflow:hidden; }
+.product-img img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
+.product-card:hover .product-img img { transform:scale(1.04); }
+.product-badge { position:absolute; top:12px; left:12px; background:var(--deep-rose); color:white; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; padding:4px 10px; border-radius:100px; z-index:2; }
+.product-wishlist { position:absolute; top:10px; right:10px; width:30px; height:30px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.85rem; transition:background .2s; cursor:pointer; border:none; z-index:2; }
+.product-wishlist:hover { background:var(--rose); }
+.product-info { padding:14px 16px 18px; }
+.product-name { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:400; margin-bottom:3px; }
+.product-material { font-size:.71rem; color:var(--text-light); letter-spacing:.04em; margin-bottom:12px; }
+.product-bottom { display:flex; align-items:center; justify-content:space-between; }
+.product-price { font-size:1.05rem; font-weight:500; color:var(--deep-rose); }
+.product-add { width:30px; height:30px; background:var(--deep-rose); color:white; border:none; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; line-height:1; }
+.product-add:hover { background:var(--text); }
+
+/* ── CUSTOM ── */
+.custom-section { padding:128px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+.custom-img { border-radius:24px; overflow:hidden; aspect-ratio:1; }
+.custom-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.custom-content .section-header { text-align:left; }
+.custom-steps { margin-top:36px; display:flex; flex-direction:column; gap:20px; }
+.step { display:flex; gap:16px; align-items:flex-start; }
+.step-num { width:34px; height:34px; background:var(--blush); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--deep-rose); flex-shrink:0; }
+.step-text strong { display:block; font-size:.88rem; margin-bottom:3px; }
+.step-text p { font-size:.81rem; color:var(--text-light); line-height:1.6; }
+
+/* ── TESTIMONIALS ── */
+.testimonials { padding:80px 48px; background:var(--blush); }
+.test-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.test-card { background:white; border-radius:18px; padding:28px; position:relative; }
+.test-stars { color:var(--deep-rose); font-size:.85rem; letter-spacing:.1em; margin-bottom:14px; }
+.test-text { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:300; font-style:italic; line-height:1.6; margin-bottom:18px; }
+.test-author { font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-light); }
+.test-quote { position:absolute; top:18px; right:22px; font-family:'Cormorant Garamond',serif; font-size:3.5rem; color:var(--rose); line-height:1; }
+
+/* ── NEWSLETTER ── */
+.newsletter { padding:128px 48px; text-align:center; background:var(--deep-rose); }
+.newsletter .section-title { color:white; }
+.newsletter .section-title em { color:var(--blush); }
+.newsletter .section-tag { color:rgba(255,255,255,.7); }
+.newsletter-desc { color:rgba(255,255,255,.8); font-size:.92rem; margin:14px auto 36px; max-width:460px; line-height:1.7; font-weight:300; }
+.newsletter-form { display:flex; max-width:420px; margin:0 auto; border-radius:100px; overflow:hidden; background:white; padding:5px 5px 5px 22px; }
+.newsletter-input { flex:1; border:none; outline:none; font-family:'Jost',sans-serif; font-size:.86rem; color:var(--text); background:transparent; }
+.newsletter-input::placeholder { color:var(--text-light); }
+.newsletter-submit { background:var(--text); color:white; border:none; padding:10px 22px; border-radius:100px; font-family:'Jost',sans-serif; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+.newsletter-submit:hover { background:#5c3d38; }
+
+/* ── FOOTER ── */
+footer { padding:56px 48px; background:var(--text); display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; }
+.footer-brand .nav-logo { color:white; margin-bottom:14px; display:block; }
+.footer-desc { font-size:.84rem; color:rgba(255,255,255,.5); line-height:1.7; font-weight:300; }
+.footer-col h4 { font-size:.71rem; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.4); margin-bottom:18px; }
+.footer-col ul { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.footer-col ul a { text-decoration:none; font-size:.84rem; color:rgba(255,255,255,.6); transition:color .2s; }
+.footer-col ul a:hover { color:var(--rose); }
+.footer-bottom { padding:22px 48px; background:var(--text); border-top:1px solid rgba(255,255,255,.08); display:flex; justify-content:space-between; align-items:center; }
+.footer-bottom p { font-size:.76rem; color:rgba(255,255,255,.3); }
+.social-links { display:flex; gap:10px; }
+.social-link { width:30px; height:30px; background:rgba(255,255,255,.1); border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:.8rem; color:rgba(255,255,255,.6); transition:background .2s; }
+.social-link:hover { background:var(--deep-rose); color:white; }
+
+/* ══════════════════════════════
+   KOŠÍK PANEL (side drawer)
+══════════════════════════════ */
+.cart-overlay { position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:200; opacity:0; pointer-events:none; transition:opacity .3s; }
+.cart-overlay.open { opacity:1; pointer-events:all; }
+.cart-panel { position:absolute; right:0; top:0; bottom:0; width:440px; background:white; transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; }
+.cart-overlay.open .cart-panel { transform:translateX(0); }
+.cart-panel-inner { display:flex; flex-direction:column; height:100%; padding:28px; }
+.cart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.cart-title { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:300; }
+.cart-close { width:34px; height:34px; background:var(--blush); border:none; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.cart-close:hover { background:var(--rose); }
+.cart-items { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+.cart-item { display:flex; gap:14px; align-items:center; padding:12px; background:var(--petal); border-radius:10px; }
+.cart-item-img { width:54px; height:54px; background:var(--blush); border-radius:8px; overflow:hidden; flex-shrink:0; }
+.cart-item-img img { width:100%; height:100%; object-fit:cover; }
+.cart-item-info { flex:1; }
+.cart-item-name { font-family:'Cormorant Garamond',serif; font-size:.95rem; }
+.cart-item-price { font-size:.83rem; color:var(--deep-rose); font-weight:500; }
+.cart-item-qty { display:flex; align-items:center; gap:8px; margin-top:4px; }
+.cart-item-qty button { width:22px; height:22px; border:1px solid var(--rose); background:white; border-radius:50%; cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; line-height:1; transition:all .2s; }
+.cart-item-qty button:hover { background:var(--deep-rose); color:white; border-color:var(--deep-rose); }
+.cart-item-qty span { font-size:.85rem; font-weight:500; min-width:20px; text-align:center; }
+.cart-item-remove { background:none; border:none; color:var(--text-light); cursor:pointer; font-size:.85rem; padding:4px; transition:color .2s; align-self:flex-start; }
+.cart-item-remove:hover { color:var(--deep-rose); }
+.cart-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.15rem; color:var(--text-light); text-align:center; }
+.cart-footer-box { padding-top:20px; border-top:1px solid var(--rose); margin-top:20px; }
+.cart-summary-row { display:flex; justify-content:space-between; font-size:.85rem; color:var(--text-light); margin-bottom:8px; }
+.cart-total-row { display:flex; justify-content:space-between; font-family:'Cormorant Garamond',serif; font-size:1.3rem; margin-bottom:20px; font-weight:400; }
+
+/* ══════════════════════════════
+   CHECKOUT MODAL (multi-step)
+══════════════════════════════ */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:white; border-radius:20px; width:100%; max-width:620px; max-height:90vh; overflow-y:auto; padding:40px; position:relative; }
+.modal-close { position:absolute; top:16px; right:16px; width:32px; height:32px; background:var(--blush); border:none; border-radius:50%; cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:var(--rose); }
+
+/* Steps indicator */
+.steps-indicator { display:flex; align-items:center; margin-bottom:32px; }
+.step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:500; border:2px solid var(--rose); color:var(--text-light); flex-shrink:0; transition:all .2s; }
+.step-dot.active { background:var(--deep-rose); border-color:var(--deep-rose); color:white; }
+.step-dot.done { background:var(--green); border-color:var(--green); color:white; }
+.step-line { flex:1; height:2px; background:var(--rose); margin:0 8px; }
+.step-line.done { background:var(--green); }
+.steps-labels { display:flex; justify-content:space-between; margin-top:6px; margin-bottom:28px; }
+.steps-labels span { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-light); flex:1; text-align:center; }
+.steps-labels span:first-child { text-align:left; }
+.steps-labels span:last-child { text-align:right; }
+
+.modal-step { display:none; }
+.modal-step.active { display:block; }
+.modal-step-title { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:300; margin-bottom:6px; }
+.modal-step-sub { font-size:.82rem; color:var(--text-light); margin-bottom:24px; }
+
+/* Form fields */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.form-row.single { grid-template-columns:1fr; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group label { font-size:.73rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-light); }
+.form-group input, .form-group select { padding:12px 16px; border:1px solid var(--rose); border-radius:10px; font-family:'Jost',sans-serif; font-size:.88rem; color:var(--text); background:white; outline:none; transition:border-color .2s; }
+.form-group input:focus, .form-group select:focus { border-color:var(--deep-rose); }
+.form-group input.error, .form-group select.error { border-color:#e05252; }
+.form-error { font-size:.72rem; color:#e05252; }
+
+/* Order summary in modal */
+.order-summary { background:var(--petal); border-radius:12px; padding:18px; margin-bottom:24px; }
+.order-summary-item { display:flex; justify-content:space-between; font-size:.85rem; padding:6px 0; border-bottom:1px solid var(--rose); }
+.order-summary-item:last-child { border:none; }
+.order-summary-total { display:flex; justify-content:space-between; font-family:'Cormorant Garamond',serif; font-size:1.2rem; padding-top:10px; }
+
+/* Shipping options */
+.shipping-options { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+.shipping-option { display:flex; align-items:center; gap:14px; padding:16px; border:2px solid var(--rose); border-radius:12px; cursor:pointer; transition:all .2s; }
+.shipping-option:hover { border-color:var(--dusty-rose); background:var(--petal); }
+.shipping-option.selected { border-color:var(--deep-rose); background:var(--blush); }
+.shipping-option input[type=radio] { display:none; }
+.shipping-radio { width:18px; height:18px; border:2px solid var(--rose); border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.shipping-option.selected .shipping-radio { border-color:var(--deep-rose); background:var(--deep-rose); }
+.shipping-option.selected .shipping-radio::after { content:''; width:6px; height:6px; background:white; border-radius:50%; display:block; }
+.shipping-icon { font-size:1.4rem; }
+.shipping-info { flex:1; }
+.shipping-name { font-size:.9rem; font-weight:500; }
+.shipping-desc { font-size:.76rem; color:var(--text-light); }
+.shipping-price { font-size:.9rem; font-weight:500; color:var(--deep-rose); }
+
+/* Payment options */
+.payment-options { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+.payment-option { display:flex; align-items:center; gap:14px; padding:16px; border:2px solid var(--rose); border-radius:12px; cursor:pointer; transition:all .2s; }
+.payment-option:hover { border-color:var(--dusty-rose); background:var(--petal); }
+.payment-option.selected { border-color:var(--deep-rose); background:var(--blush); }
+.payment-radio { width:18px; height:18px; border:2px solid var(--rose); border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.payment-option.selected .payment-radio { border-color:var(--deep-rose); background:var(--deep-rose); }
+.payment-option.selected .payment-radio::after { content:''; width:6px; height:6px; background:white; border-radius:50%; display:block; }
+.payment-icon { font-size:1.4rem; }
+.payment-info { flex:1; }
+.payment-name { font-size:.9rem; font-weight:500; }
+.payment-desc { font-size:.76rem; color:var(--text-light); }
+.payment-extra { font-size:.76rem; color:var(--deep-rose); font-weight:500; }
+
+/* Final review */
+.review-section { margin-bottom:20px; }
+.review-section h4 { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-light); margin-bottom:10px; }
+.review-block { background:var(--petal); border-radius:10px; padding:14px 16px; font-size:.86rem; line-height:1.7; }
+.review-edit { font-size:.72rem; color:var(--deep-rose); cursor:pointer; float:right; text-decoration:underline; }
+
+/* Navigation buttons */
+.modal-nav { display:flex; justify-content:space-between; align-items:center; margin-top:28px; gap:12px; }
+.btn-back { background:transparent; color:var(--text-light); border:1px solid var(--rose); padding:12px 28px; font-family:'Jost',sans-serif; font-size:.76rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; border-radius:100px; transition:all .2s; }
+.btn-back:hover { background:var(--blush); }
+.btn-next { background:var(--deep-rose); color:white; border:none; padding:14px 36px; font-family:'Jost',sans-serif; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; border-radius:100px; transition:background .2s; flex:1; }
+.btn-next:hover { background:var(--text); }
+.btn-next:disabled { background:var(--dusty-rose); cursor:not-allowed; }
+
+/* ── SUCCESS SCREEN ── */
+.success-screen { text-align:center; padding:20px 0; }
+.success-icon { font-size:4rem; margin-bottom:16px; }
+.success-title { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; margin-bottom:8px; }
+.success-sub { font-size:.9rem; color:var(--text-light); line-height:1.7; max-width:380px; margin:0 auto 24px; }
+.success-order-num { background:var(--petal); border-radius:10px; padding:14px 20px; display:inline-block; font-family:'Cormorant Garamond',serif; font-size:1.1rem; margin-bottom:28px; }
+.success-order-num span { color:var(--deep-rose); font-weight:600; }
+
+/* ── NOTIFICATION ── */
+.notification { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--text); color:white; padding:12px 26px; border-radius:100px; font-size:.8rem; letter-spacing:.06em; z-index:400; transition:transform .3s ease; white-space:nowrap; }
+.notification.show { transform:translateX(-50%) translateY(0); }
+
+/* ── STRIPE LOADING ── */
+.stripe-loading { text-align:center; padding:20px; }
+.spinner { width:32px; height:32px; border:3px solid var(--rose); border-top-color:var(--deep-rose); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px) {
+  .hero { grid-template-columns:1fr; }
+  .hero-right { height:55vw; }
+  .products-grid { grid-template-columns:repeat(2,1fr); }
+  .cat-grid { grid-template-columns:repeat(2,1fr); }
+  footer { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:768px) {
+  nav { padding:16px 24px; }
+  .nav-links { display:none; }
+  .hero-left { padding:60px 24px; }
+  .hero-right { height:60vw; }
+  .categories,.products,.testimonials,.newsletter { padding:60px 24px; }
+  .custom-section { padding:60px 24px; grid-template-columns:1fr; }
+  .products-grid { grid-template-columns:repeat(2,1fr); gap:14px; }
+  .products-header { flex-direction:column; gap:18px; align-items:flex-start; }
+  .test-grid { grid-template-columns:1fr; }
+  footer { grid-template-columns:1fr; padding:40px 24px; }
+  .footer-bottom { flex-direction:column; gap:14px; padding:18px 24px; }
+  .cart-panel { width:100%; }
+  .modal { padding:24px; border-radius:16px; }
+  .form-row { grid-template-columns:1fr; }
+}
+
+/* PRODUCT DETAIL MODAL */
+.pdetail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .28s;}
+.pdetail-overlay.open{opacity:1;pointer-events:all;}
+.pdetail-box{background:white;border-radius:20px;width:100%;max-width:860px;max-height:90vh;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;transform:scale(.94);transition:transform .28s;position:relative;}
+.pdetail-overlay.open .pdetail-box{transform:scale(1);}
+.pdetail-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:white;border:none;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 2px 12px rgba(0,0,0,.12);transition:background .2s;}
+.pdetail-close:hover{background:var(--rose);}
+.pdetail-gallery{position:relative;background:var(--blush);overflow:hidden;}
+.pdetail-slides{display:flex;height:100%;transition:transform .35s ease;}
+.pdetail-slide{min-width:100%;height:100%;}
+.pdetail-slide img{width:100%;height:100%;object-fit:cover;display:block;}
+.pdetail-prev,.pdetail-next{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;background:white;border:none;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;z-index:3;box-shadow:0 2px 10px rgba(0,0,0,.1);transition:all .2s;}
+.pdetail-prev{left:12px;}.pdetail-next{right:12px;}
+.pdetail-prev:hover,.pdetail-next:hover{background:var(--deep-rose);color:white;}
+.pdetail-dots{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;gap:6px;}
+.pdetail-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.6);cursor:pointer;transition:background .2s;border:none;}
+.pdetail-dot.active{background:white;}
+.pdetail-info{padding:36px 32px;overflow-y:auto;display:flex;flex-direction:column;}
+.pdetail-badge{display:inline-block;background:var(--blush);color:var(--deep-rose);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:100px;margin-bottom:14px;}
+.pdetail-name{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;line-height:1.15;margin-bottom:8px;}
+.pdetail-material{font-size:.77rem;color:var(--text-light);letter-spacing:.06em;margin-bottom:18px;}
+.pdetail-price{font-size:1.6rem;font-weight:500;color:var(--deep-rose);font-family:'Cormorant Garamond',serif;margin-bottom:20px;}
+.pdetail-desc{font-size:.88rem;line-height:1.75;color:var(--text-light);font-weight:300;margin-bottom:28px;flex:1;}
+.pdetail-divider{border:none;border-top:1px solid var(--rose);margin-bottom:20px;}
+.pdetail-props{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.pdetail-prop{display:flex;gap:10px;font-size:.8rem;}
+.pdetail-prop strong{color:var(--text);min-width:80px;}
+.pdetail-prop span{color:var(--text-light);}
+.pdetail-add-btn{background:var(--deep-rose);color:white;border:none;padding:14px;font-family:'Jost',sans-serif;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:100px;transition:background .2s;width:100%;}
+.pdetail-add-btn:hover{background:var(--text);}
+/* Load more */
+.load-more-wrap{text-align:center;margin-top:40px;}
+.btn-load-more{background:white;color:var(--text);border:1px solid var(--dusty-rose);padding:13px 40px;font-family:'Jost',sans-serif;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:100px;transition:all .2s;}
+.btn-load-more:hover{background:var(--blush);}
+.btn-collapse{background:var(--blush);color:var(--deep-rose);border:1px solid var(--dusty-rose);padding:13px 40px;font-family:'Jost',sans-serif;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:100px;transition:all .2s;margin-left:12px;}
+.btn-collapse:hover{background:var(--rose);}
+
+@media(max-width:768px){.pdetail-box{grid-template-columns:1fr;}.pdetail-gallery{height:260px;}.pdetail-info{padding:24px 20px;}}
+@media(max-width:1024px){.pdetail-box{grid-template-columns:1fr;max-width:480px;}.pdetail-gallery{height:300px;}}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <a href="#" class="nav-logo">Pure<span>Geo</span>Gems</a>
+  <ul class="nav-links">
+    <li><a href="#produkty">Kolekce</a></li>
+    <li><a href="#naruci">Na míru</a></li>
+    <li><a href="#o-nas">O nás</a></li>
+    <li><a href="#kontakt">Kontakt</a></li>
+  </ul>
+  <button class="nav-cart" onclick="toggleCart()">
+    Košík <span class="cart-badge" id="cartBadge">0</span>
+  </button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-tag">✦ Ručně vyrobeno s láskou</p>
+    <h1 class="hero-title">Šperky, které <em>vyprávějí</em> příběh</h1>
+    <p class="hero-desc">Každý náramek a náušnice jsou vytvořeny s péčí přímo u nás doma. Unikátní kousky z pečlivě vybraných materiálů — pro vás nebo jako nezapomenutelný dárek.</p>
+    <div class="hero-btns">
+      <a href="#produkty" class="btn-primary">Prohlédnout kolekci</a>
+      <a href="#naruci" class="btn-ghost">Vytvořit na míru</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <video class="hero-video" autoplay muted loop playsinline>
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-jewelry-with-beads-18456-large.mp4" type="video/mp4">
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-handcrafted-jewelry-close-up-18456-large.mp4" type="video/mp4">
+      <!-- Záložní fotka pokud video nefunguje -->
+      <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=900&q=80" alt="PureGeoGems šperky"/>
+    </video>
+    <div class="floating-badge">
+      <div class="floating-badge-icon">💝</div>
+      <div class="floating-badge-text">
+        <strong>Každý kus je unikát</strong>
+        <span>Vyrobeno ručně s láskou</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CATEGORIES ═══ -->
+<section class="categories">
+  <div class="section-header">
+    <span class="section-tag">✦ Co nabízíme</span>
+    <h2 class="section-title">Naše <em>kolekce</em></h2>
+  </div>
+  <div class="cat-grid">
+    <div class="cat-card" onclick="filterProductsAndScroll('naramky')">
+      <div class="cat-badge">5 druhů</div>
+      <img src="https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=600&q=80" alt="Náramky"/>
+      <div class="cat-overlay">
+        <h3 class="cat-name">Náramky</h3>
+        <p class="cat-count">Ručně navlékané · na míru</p>
+        <p class="cat-desc">Vyberte si z perliček, minerálů nebo pryskyřice. Každý náramek šijeme přesně na délku vašeho zápěstí.</p>
+        <button class="cat-btn">Zobrazit náramky →</button>
+      </div>
+    </div>
+    <div class="cat-card" onclick="filterProductsAndScroll('nausnice')">
+      <div class="cat-badge">4 druhy</div>
+      <img src="https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=600&q=80" alt="Náušnice"/>
+      <div class="cat-overlay">
+        <h3 class="cat-name">Náušnice</h3>
+        <p class="cat-count">Lehké · chirurgická ocel</p>
+        <p class="cat-desc">Od jemných puzetů po visací náušnice. Lehké materiály, které nebudou zatěžovat vaše uši celý den.</p>
+        <button class="cat-btn">Zobrazit náušnice →</button>
+      </div>
+    </div>
+    <div class="cat-card" onclick="filterProductsAndScroll('darcekove')">
+      <div class="cat-badge">Dárky</div>
+      <img src="https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600&q=80" alt="Dárkové sety"/>
+      <div class="cat-overlay">
+        <h3 class="cat-name">Dárkové sety</h3>
+        <p class="cat-count">Ladící soupravy · dárková krabička</p>
+        <p class="cat-desc">Náramek a náušnice ve sladěných barvách, krásně zabalené. Ideální dárek k narozeninám i jen tak.</p>
+        <button class="cat-btn">Zobrazit sety →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRODUCTS ═══ -->
+<section class="products" id="produkty">
+  <div class="products-header">
+    <div class="section-header">
+      <span class="section-tag">✦ Dostupné kousky</span>
+      <h2 class="section-title">Právě v <em>nabídce</em></h2>
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterProducts('vse',this)">Vše</button>
+      <button class="filter-tab" onclick="filterProducts('naramky',this)">Náramky</button>
+      <button class="filter-tab" onclick="filterProducts('nausnice',this)">Náušnice</button>
+    </div>
+  </div>
+  <div class="products-grid" id="productsGrid">
+
+    <div class="product-card" data-cat="naramky" data-id="1" onclick="openProduct(1)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500&q=80" alt="Levandulovy naramek" loading="lazy"/><div class="product-badge">Nove</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Levandulový náramek</h3><p class="product-material">Fialové perly · na míru</p><div class="product-bottom"><span class="product-price">249 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,1)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="nausnice" data-id="2" onclick="openProduct(2)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=500&q=80" alt="Tresnovenaušnice" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Třešňové náušnice</h3><p class="product-material">Růžové korálky · visací</p><div class="product-bottom"><span class="product-price">189 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,2)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="naramky" data-id="3" onclick="openProduct(3)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=500&q=80" alt="Lesni naramek" loading="lazy"/><div class="product-badge">Bestseller</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Lesní náramek</h3><p class="product-material">Přírodní minerály · pryskyřice</p><div class="product-bottom"><span class="product-price">299 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,3)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="nausnice" data-id="4" onclick="openProduct(4)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=500&q=80" alt="Zlate krouzkove" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Zlaté kroužkové</h3><p class="product-material">Zlaté komponenty · lehké</p><div class="product-bottom"><span class="product-price">159 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,4)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="naramky" data-id="5" onclick="openProduct(5)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&q=80" alt="Perlickový naramek" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Perličkový náramek</h3><p class="product-material">Bílé perly · stříbrné zapínání</p><div class="product-bottom"><span class="product-price">279 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,5)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="darcekove" data-id="6" onclick="openProduct(6)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=500&q=80" alt="Darkovy set" loading="lazy"/><div class="product-badge">Darček</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Dárkový set — duo</h3><p class="product-material">Náramek + náušnice · krabička</p><div class="product-bottom"><span class="product-price">399 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,6)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="nausnice" data-id="7" onclick="openProduct(7)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=500&q=80" alt="Perlickove puzetky" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Perličkové puzetky</h3><p class="product-material">Pudrové perly · zapínání</p><div class="product-bottom"><span class="product-price">169 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,7)">+</button></div></div>
+    </div>
+
+    <div class="product-card" data-cat="naramky" data-id="8" onclick="openProduct(8)">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80" alt="Rosy dream" loading="lazy"/><div class="product-badge">Nové</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Rosy dream náramek</h3><p class="product-material">Růžové skleněné perličky</p><div class="product-bottom"><span class="product-price">229 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,8)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="naramky" data-id="9" onclick="openProduct(9)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=500&q=80" alt="Modry ocean" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Modrý oceán</h3><p class="product-material">Tyrkysové korálky · stříbro</p><div class="product-bottom"><span class="product-price">259 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,9)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="nausnice" data-id="10" onclick="openProduct(10)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=500&q=80" alt="Mesicni visacky" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Měsíční visačky</h3><p class="product-material">Perleťové komponenty</p><div class="product-bottom"><span class="product-price">199 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,10)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="naramky" data-id="11" onclick="openProduct(11)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80" alt="Vintage ruze" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Vintage růže</h3><p class="product-material">Starorůžové korálky · zlatá</p><div class="product-bottom"><span class="product-price">239 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,11)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="darcekove" data-id="12" onclick="openProduct(12)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=500&q=80" alt="Darkovy set trio" loading="lazy"/><div class="product-badge">Premium</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Dárkový set — trio</h3><p class="product-material">Náramek + 2× náušnice · luxusní balení</p><div class="product-bottom"><span class="product-price">549 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,12)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="nausnice" data-id="13" onclick="openProduct(13)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=500&q=80" alt="Hvezdne trpytky" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Hvězdné třpytky</h3><p class="product-material">Krystalické komponenty</p><div class="product-bottom"><span class="product-price">209 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,13)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="naramky" data-id="14" onclick="openProduct(14)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&q=80" alt="Zimni min" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Zimní min</h3><p class="product-material">Bílé a stříbrné perličky</p><div class="product-bottom"><span class="product-price">249 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,14)">+</button></div></div>
+    </div>
+
+    <div class="product-card product-hidden" data-cat="nausnice" data-id="15" onclick="openProduct(15)" style="display:none">
+      <div class="product-img"><img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=500&q=80" alt="Jemna kapka" loading="lazy"/><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
+      <div class="product-info"><h3 class="product-name">Jemná kapka</h3><p class="product-material">Kapkovité komponenty · rose gold</p><div class="product-bottom"><span class="product-price">179 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,15)">+</button></div></div>
+    </div>
+
+  </div>
+  <div class="load-more-wrap" id="loadMoreWrap">
+    <button class="btn-load-more" id="btnLoadMore" onclick="loadMore()">Zobrazit další produkty ↓</button>
+    <button class="btn-collapse" id="btnCollapse" onclick="collapseProducts()" style="display:none">Sbalit ↑</button>
+  </div>
+</section>
+
+<!-- ═══ CUSTOM ═══ -->
+<section class="custom-section" id="naruci">
+  <div class="custom-img"><img src="https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80" alt="Výroba na míru"/></div>
+  <div class="custom-content">
+    <div class="section-header">
+      <span class="section-tag">✦ Vaše přání je náš rozkaz</span>
+      <h2 class="section-title">Náramek <em>přesně pro vás</em></h2>
+    </div>
+    <p style="color:var(--text-light);font-size:.91rem;line-height:1.8;font-weight:300;margin-top:8px;">Vytvořte si svůj vlastní šperk. Vyberete barvy, délku, styl — a já ho pro vás s láskou ručně vyrobím.</p>
+    <div class="custom-steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Napište mi</strong><p>Přes Instagram nebo e-mail mi pošlete svou představu.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Domluvíme se</strong><p>Pošlu vám návrh a ukázku materiálů před výrobou.</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Dostanete unikát</strong><p>Váš šperk vyrobím do 3–5 dnů v hezké dárkové krabičce.</p></div></div>
+    </div>
+    <a href="mailto:brozpetr.bp@gmail.com" class="btn-primary" style="margin-top:30px;display:inline-block;">Napsat dotaz ✉️</a>
+  </div>
+</section>
+
+<!-- ═══ TESTIMONIALS ═══ -->
+<section class="testimonials" id="o-nas">
+  <div class="section-header">
+    <span class="section-tag">✦ Co říkají zákaznice</span>
+    <h2 class="section-title">Jejich <em>příběhy</em></h2>
+  </div>
+  <div class="test-grid">
+    <div class="test-card"><div class="test-quote">"</div><div class="test-stars">★★★★★</div><p class="test-text">Objednala jsem náramek na míru jako dárek pro sestru. Dorazil v krásném balení a sestra ho miluje!</p><p class="test-author">— Tereza K., Praha</p></div>
+    <div class="test-card"><div class="test-quote">"</div><div class="test-stars">★★★★★</div><p class="test-text">Krásné náušnice, super komunikace, rychlé doručení. Přesně to, co jsem hledala. Moc děkuji!</p><p class="test-author">— Lucie M., Brno</p></div>
+    <div class="test-card"><div class="test-quote">"</div><div class="test-stars">★★★★★</div><p class="test-text">Vidím, že každý detail je dělaný s láskou. Skutečně ruční práce, která to znát!</p><p class="test-author">— Monika P., Olomouc</p></div>
+  </div>
+</section>
+
+<!-- ═══ NEWSLETTER ═══ -->
+<section class="newsletter">
+  <div class="section-header">
+    <span class="section-tag">✦ Buďte první</span>
+    <h2 class="section-title">Novinky a <em>inspirace</em></h2>
+  </div>
+  <p class="newsletter-desc">Přihlaste se k odběru a dostávejte jako první informace o nových kouscích a akcích.</p>
+  <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+    <input type="email" class="newsletter-input" placeholder="váš@email.cz">
+    <button type="submit" class="newsletter-submit">Odebírat</button>
+  </form>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer id="kontakt">
+  <div class="footer-brand">
+    <a href="#" class="nav-logo">Pure<span>Geo</span>Gems</a>
+    <p class="footer-desc">Ručně vyráběné šperky s láskou.<br>Každý kus je originálem z domácí dílny.</p>
+  </div>
+  <div class="footer-col"><h4>Kolekce</h4><ul><li><a href="#">Náramky</a></li><li><a href="#">Náušnice</a></li><li><a href="#">Dárkové sety</a></li><li><a href="#">Na míru</a></li></ul></div>
+  <div class="footer-col"><h4>Info</h4><ul><li><a href="#">O nás</a></li><li><a href="#">Doprava & vrácení</a></li><li><a href="#">Péče o šperky</a></li></ul></div>
+  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="mailto:brozpetr.bp@gmail.com">brozpetr.bp@gmail.com</a></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li></ul></div>
+</footer>
+<div class="footer-bottom">
+  <p>Vytvořil Petr Brož</p>
+  <p>www.broz-petr.cz</p>
+  <p>© 2026 PureGeoGems · Ručně vyráběno s láskou ♥</p>
+  <div class="social-links">
+    <a href="#" class="social-link">📸</a>
+    <a href="#" class="social-link">👍</a>
+    <a href="#" class="social-link">✉️</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     KOŠÍK (side panel)
+══════════════════════════════════════════ -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCartOutside(event)">
+  <div class="cart-panel">
+    <div class="cart-panel-inner">
+      <div class="cart-header">
+        <h2 class="cart-title">Váš košík</h2>
+        <button class="cart-close" onclick="toggleCart()">✕</button>
+      </div>
+      <div class="cart-items" id="cartItems">
+        <div class="cart-empty">🛍️<br><span>Košík je prázdný</span></div>
+      </div>
+      <div id="cartFooterBox" style="display:none">
+        <div class="cart-footer-box">
+          <div class="cart-summary-row"><span>Mezisoučet</span><span id="cartSubtotal">0 Kč</span></div>
+          <div class="cart-summary-row"><span>Doprava</span><span>Zvolíte v dalším kroku</span></div>
+          <div class="cart-total-row"><span>Celkem</span><span id="cartTotal">0 Kč</span></div>
+          <button class="btn-next" onclick="startCheckout()" style="width:100%">Přejít k objednávce →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PRODUCT DETAIL MODAL -->
+<div class="pdetail-overlay" id="pdetailOverlay" onclick="closePdetailOutside(event)">
+  <div class="pdetail-box" id="pdetailBox">
+    <button class="pdetail-close" onclick="closePdetail()">&#10005;</button>
+    <div class="pdetail-gallery" id="pdetailGallery">
+      <div class="pdetail-slides" id="pdetailSlides"></div>
+      <button class="pdetail-prev" onclick="slideGallery(-1)">&#8249;</button>
+      <button class="pdetail-next" onclick="slideGallery(1)">&#8250;</button>
+      <div class="pdetail-dots" id="pdetailDots"></div>
+    </div>
+    <div class="pdetail-info" id="pdetailInfo"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHECKOUT MODAL (4 kroky)
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCheckout()">✕</button>
+
+    <!-- Steps indicator -->
+    <div class="steps-indicator">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line" id="line12"></div>
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-line" id="line23"></div>
+      <div class="step-dot" id="dot3">3</div>
+      <div class="step-line" id="line34"></div>
+      <div class="step-dot" id="dot4">4</div>
+    </div>
+    <div class="steps-labels">
+      <span>Kontakt</span><span>Doprava</span><span>Platba</span><span>Shrnutí</span>
+    </div>
+
+    <!-- ── KROK 1: Kontaktní údaje ── -->
+    <div class="modal-step active" id="step1">
+      <h2 class="modal-step-title">Kontaktní údaje</h2>
+      <p class="modal-step-sub">Vyplňte prosím Vaše doručovací informace</p>
+
+      <div class="form-row">
+        <div class="form-group"><label>Jméno *</label><input type="text" id="f_jmeno" placeholder="Jana"></div>
+        <div class="form-group"><label>Příjmení *</label><input type="text" id="f_prijmeni" placeholder="Nováková"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>E-mail *</label><input type="email" id="f_email" placeholder="jana@email.cz"></div>
+        <div class="form-group"><label>Telefon *</label><input type="tel" id="f_telefon" placeholder="+420 777 123 456"></div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>Ulice a číslo popisné *</label><input type="text" id="f_ulice" placeholder="Náměstí Míru 12"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Město *</label><input type="text" id="f_mesto" placeholder="Praha"></div>
+        <div class="form-group"><label>PSČ *</label><input type="text" id="f_psc" placeholder="110 00"></div>
+      </div>
+
+      <div class="modal-nav">
+        <button class="btn-next" onclick="goToStep2()">Pokračovat — Doprava →</button>
+      </div>
+    </div>
+
+    <!-- ── KROK 2: Doprava ── -->
+    <div class="modal-step" id="step2">
+      <h2 class="modal-step-title">Způsob doručení</h2>
+      <p class="modal-step-sub">Zvolte, jak chcete zásilku dostat</p>
+
+      <div class="shipping-options">
+        <div class="shipping-option" id="ship_zasilkovna" onclick="selectShipping('zasilkovna',79)">
+          <div class="shipping-radio"></div>
+          <div class="shipping-icon">📦</div>
+          <div class="shipping-info">
+            <div class="shipping-name">Zásilkovna — výdejní místo</div>
+            <div class="shipping-desc">Doručení na nejbližší výdejní místo dle vaší adresy · 2–4 pracovní dny</div>
+          </div>
+          <div class="shipping-price">79 Kč</div>
+        </div>
+        <div class="shipping-option" id="ship_zasilkovna_dom" onclick="selectShipping('zasilkovna_dom',99)">
+          <div class="shipping-radio"></div>
+          <div class="shipping-icon">🚚</div>
+          <div class="shipping-info">
+            <div class="shipping-name">Zásilkovna — doručení domů</div>
+            <div class="shipping-desc">Kurýr doručí přímo na adresu · 2–3 pracovní dny</div>
+          </div>
+          <div class="shipping-price">99 Kč</div>
+        </div>
+        <div class="shipping-option" id="ship_osobni" onclick="selectShipping('osobni',0)">
+          <div class="shipping-radio"></div>
+          <div class="shipping-icon">🤝</div>
+          <div class="shipping-info">
+            <div class="shipping-name">Osobní odběr</div>
+            <div class="shipping-desc">Liberec a Jablonec</div>
+          </div>
+          <div class="shipping-price">Zdarma</div>
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="order-summary" id="orderSummaryStep2"></div>
+
+      <div class="modal-nav">
+        <button class="btn-back" onclick="goToStep(1)">← Zpět</button>
+        <button class="btn-next" id="btnStep2Next" onclick="goToStep3()" disabled>Pokračovat — Platba →</button>
+      </div>
+    </div>
+
+    <!-- ── KROK 3: Platba ── -->
+    <div class="modal-step" id="step3">
+      <h2 class="modal-step-title">Způsob platby</h2>
+      <p class="modal-step-sub">Zvolte preferovaný způsob úhrady</p>
+
+      <div class="payment-options">
+        <div class="payment-option" id="pay_card" onclick="selectPayment('card')">
+          <div class="payment-radio"></div>
+          <div class="payment-icon">💳</div>
+          <div class="payment-info">
+            <div class="payment-name">Platební karta</div>
+            <div class="payment-desc">Visa, Mastercard, Apple Pay, Google Pay · Zabezpečeno přes Stripe</div>
+          </div>
+          <div class="payment-extra">+ 0 Kč</div>
+        </div>
+        <div class="payment-option" id="pay_cod" onclick="selectPayment('cod')">
+          <div class="payment-radio"></div>
+          <div class="payment-icon">💵</div>
+          <div class="payment-info">
+            <div class="payment-name">Dobírka</div>
+            <div class="payment-desc">Platíte hotově kurýrovi při převzetí zásilky</div>
+          </div>
+          <div class="payment-extra">+ 39 Kč</div>
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="order-summary" id="orderSummaryStep3"></div>
+
+      <div class="modal-nav">
+        <button class="btn-back" onclick="goToStep(2)">← Zpět</button>
+        <button class="btn-next" id="btnStep3Next" onclick="goToStep4()" disabled>Pokračovat — Shrnutí →</button>
+      </div>
+    </div>
+
+    <!-- ── KROK 4: Shrnutí + potvrzení ── -->
+    <div class="modal-step" id="step4">
+      <h2 class="modal-step-title">Shrnutí objednávky</h2>
+      <p class="modal-step-sub">Zkontrolujte prosím všechny údaje</p>
+
+      <div class="review-section">
+        <h4>Doručovací adresa <span class="review-edit" onclick="goToStep(1)">Upravit</span></h4>
+        <div class="review-block" id="reviewContact"></div>
+      </div>
+      <div class="review-section">
+        <h4>Doprava <span class="review-edit" onclick="goToStep(2)">Upravit</span></h4>
+        <div class="review-block" id="reviewShipping"></div>
+      </div>
+      <div class="review-section">
+        <h4>Platba <span class="review-edit" onclick="goToStep(3)">Upravit</span></h4>
+        <div class="review-block" id="reviewPayment"></div>
+      </div>
+      <div class="review-section">
+        <h4>Produkty</h4>
+        <div class="order-summary" id="orderSummaryFinal"></div>
+      </div>
+
+      <div class="modal-nav">
+        <button class="btn-back" onclick="goToStep(3)">← Zpět</button>
+        <button class="btn-next" id="btnConfirm" onclick="confirmOrder()">✓ Dokončit objednávku</button>
+      </div>
+    </div>
+
+    <!-- ── SUCCESS ── -->
+    <div class="modal-step" id="stepSuccess">
+      <div class="success-screen">
+        <div class="success-icon">🎉</div>
+        <h2 class="success-title">Objednávka přijata!</h2>
+        <p class="success-sub">Děkujeme za váš nákup. Potvrzení jsme odeslali na váš e-mail. Brzy se Vám ozveme ohledně odeslání.</p>
+        <div class="success-order-num">Číslo objednávky: <span id="successOrderNum">#PGG-00001</span></div>
+        <button class="btn-primary" onclick="closeCheckout(); resetAfterOrder()">Zpět do obchodu</button>
+      </div>
+    </div>
+
+    <!-- ── STRIPE LOADING ── -->
+    <div class="modal-step" id="stepLoading">
+      <div class="stripe-loading">
+        <div class="spinner"></div>
+        <p style="color:var(--text-light);font-size:.88rem;">Přesměrováváme na bezpečnou platbu...</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── NOTIFICATION ── -->
+<div class="notification" id="notification">Přidáno do košíku</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════
+// ⚙️  KONFIGURACE — vyplňte své klíče
+// ═══════════════════════════════════════
+const CONFIG = {
+  // Stripe — váš publishable key (pk_live_...)
+  STRIPE_PUBLISHABLE_KEY: 'pk_live_51T3ksq3BFPpLFlQTQkvtZk2IvTrd1G6Mlb43mMc1pFEqBOpAAG7WhNwnkOVcquIpLDphbMDG7uCZfFcJ9WVl232z00UZTfqPh6',
+
+  // EmailJS — nastavte po registraci na emailjs.com (viz NÁVOD níže)
+  EMAILJS_SERVICE_ID:  'service_f50ac8l',
+  EMAILJS_TEMPLATE_CUSTOMER: 'template_lmc4zr4',
+  EMAILJS_TEMPLATE_OWNER:    'template_7xx44nd',
+  EMAILJS_PUBLIC_KEY:  'iXnU6HM3r6JUtqiF4',
+
+  // Váš e-mail pro upozornění
+  OWNER_EMAIL: 'brozpetr.bp@gmail.com',
+
+  // Stripe — URL pro přesměrování po platbě kartou
+  // Nastavte na URL vašeho webu, kde je tato stránka
+  SUCCESS_URL: window.location.href + '?order=success',
+  CANCEL_URL:  window.location.href + '?order=cancel',
+};
+
+
+// ═══════════════════════════════
+// PRODUCT DATA
+// ═══════════════════════════════
+const PRODUCTS = [
+  {id:1,cat:'naramky',name:'Levandulový náramek',material:'Fialové perly · na míru',price:249,badge:'Nové',
+   imgs:['https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80','https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80','https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80'],
+   desc:'Jemný levandulový náramek z ručně navlečených fialových perliček. Každý kus je vyroben na míru dle vaší délky zápěstí. Ideální jako dárek nebo pro sebe.',
+   props:{'Materiál':'Skleněné perly','Barva':'Fialová, světle růžová','Délka':'Na míru 14–20 cm','Zapínání':'Stříbrné karabinky'}},
+  {id:2,cat:'nausnice',name:'Třešňové náušnice',material:'Růžové korálky · visací',price:189,badge:'',
+   imgs:['https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=800&q=80','https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&q=80'],
+   desc:'Lehké visací náušnice z jemných růžových korálků. Visí elegantně a pohybují se s každým vaším pohybem. Vhodné na každý den i slavnostní příležitosti.',
+   props:{'Materiál':'Skleněné korálky','Barva':'Růžová, bílá','Délka':'cca 4 cm','Háček':'Zlatý chirurgická ocel'}},
+  {id:3,cat:'naramky',name:'Lesní náramek',material:'Přírodní minerály · pryskyřice',price:299,badge:'Bestseller',
+   imgs:['https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80','https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80'],
+   desc:'Přírodní náramek inspirovaný lesem. Kombinace zelených minerálů a průhledné pryskyřice vytváří unikátní vzhled připomínající lesní zátiší.',
+   props:{'Materiál':'Minerály, pryskyřice','Barva':'Zelená, hnědá','Délka':'19 cm (pevná)','Zapínání':'Magnetické'}},
+  {id:4,cat:'nausnice',name:'Zlaté kroužkové',material:'Zlaté komponenty · lehké',price:159,badge:'',
+   imgs:['https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=800&q=80','https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=800&q=80'],
+   desc:'Klasické zlaté kroužkové náušnice s jemnými perličkami. Nadčasový design, který sedí ke všemu. Velmi lehké a pohodlné na celý den.',
+   props:{'Materiál':'Zlatý kov + perly','Barva':'Zlatá, bílá','Průměr':'2 cm','Háček':'Zlatý'}},
+  {id:5,cat:'naramky',name:'Perličkový náramek',material:'Bílé perly · stříbrné zapínání',price:279,badge:'',
+   imgs:['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80','https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80'],
+   desc:'Elegantní náramek z bílých perliček se stříbrným zapínáním. Čistý a sofistikovaný look ke každé příležitosti.',
+   props:{'Materiál':'Bílé perly','Barva':'Bílá, stříbrná','Délka':'Na míru 14–20 cm','Zapínání':'Stříbrné karabinky'}},
+  {id:6,cat:'darcekove',name:'Dárkový set — duo',material:'Náramek + náušnice · krabička',price:399,badge:'Dárek',
+   imgs:['https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800&q=80','https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80'],
+   desc:'Kompletní dárkový set s ladícím náramkem a náušnicemi v krásné dárkové krabičce. Ideální na narozeniny nebo výročí.',
+   props:{'Obsah':'Náramek + náušnice','Balení':'Dárková krabička s mašlí','Barvy':'Dle výběru','Doručení':'2–4 prac. dny'}},
+  {id:7,cat:'nausnice',name:'Perličkové puzetky',material:'Pudrové perly · zapínání',price:169,badge:'',
+   imgs:['https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&q=80','https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=800&q=80'],
+   desc:'Jemné puzetové náušnice v pudrové barvě. Nenápadné a elegantní — ideální pro každodenní nošení.',
+   props:{'Materiál':'Pudrové perly','Barva':'Pudrová, růžová','Typ':'Puzeta','Velikost':'8 mm'}},
+  {id:8,cat:'naramky',name:'Rosy dream náramek',material:'Růžové skleněné perličky',price:229,badge:'Nové',
+   imgs:['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80','https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80'],
+   desc:'Snový růžový náramek plný jemných skleněných perliček v různých odstínech růžové. Lehký, romantický, krásný.',
+   props:{'Materiál':'Skleněné perličky','Barva':'Světle růžová, broskvová','Délka':'Na míru','Zapínání':'Zlaté karabinky'}},
+  {id:9,cat:'naramky',name:'Modrý oceán',material:'Tyrkysové korálky · stříbro',price:259,badge:'',
+   imgs:['https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80'],
+   desc:'Náramek inspirovaný mořem. Tyrkysové a modré korálky vytváří krásný gradient připomínající vlny.',
+   props:{'Materiál':'Tyrkysové korálky','Barva':'Tyrkysová, modrá','Délka':'Na míru','Zapínání':'Stříbrné'}},
+  {id:10,cat:'nausnice',name:'Měsíční visačky',material:'Perleťové komponenty',price:199,badge:'',
+   imgs:['https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=800&q=80'],
+   desc:'Tajemné náušnice s perleťovým leskem. Krásně se třpytí při pohybu a přitahují pozornost.',
+   props:{'Materiál':'Perleťový kov','Barva':'Bílá, perleťová','Délka':'5 cm','Háček':'Zlatý'}},
+  {id:11,cat:'naramky',name:'Vintage růže',material:'Starorůžové korálky · zlatá',price:239,badge:'',
+   imgs:['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80'],
+   desc:'Romantický náramek ve vintage stylu. Starorůžové korálky s zlatými doplňky evokují nostalgii a eleganci.',
+   props:{'Materiál':'Skleněné korálky, kov','Barva':'Starorůžová, zlatá','Délka':'Na míru','Zapínání':'Zlaté karabinky'}},
+  {id:12,cat:'darcekove',name:'Dárkový set — trio',material:'Náramek + 2x náušnice · luxusní balení',price:549,badge:'Premium',
+   imgs:['https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800&q=80'],
+   desc:'Luxusní dárkový set tří šperků. Jeden náramek a dvě páry náušnic ve sladěných barvách v elegantní krabičce.',
+   props:{'Obsah':'Náramek + 2x náušnice','Balení':'Luxusní krabička','Barvy':'Dle výběru','Cena':'Výhodná kombinace'}},
+  {id:13,cat:'nausnice',name:'Hvězdné třpytky',material:'Krystalické komponenty',price:209,badge:'',
+   imgs:['https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=800&q=80'],
+   desc:'Jiskřivé náušnice z krystalických komponentů zachycující světlo. Perfektní pro večerní příležitosti.',
+   props:{'Materiál':'Krystalky, zlatý kov','Barva':'Průhledná, zlatá','Délka':'3 cm','Háček':'Zlatý'}},
+  {id:14,cat:'naramky',name:'Zimní min',material:'Bílé a stříbrné perličky',price:249,badge:'',
+   imgs:['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80'],
+   desc:'Čistý a svěží náramek v bílých a stříbrných tónech. Minimalistický design pro milovnice jednoduché elegance.',
+   props:{'Materiál':'Bílé perly, stříbro','Barva':'Bílá, stříbrná','Délka':'Na míru','Zapínání':'Stříbrné karabinky'}},
+  {id:15,cat:'nausnice',name:'Jemná kapka',material:'Kapkovité komponenty · rose gold',price:179,badge:'',
+   imgs:['https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&q=80'],
+   desc:'Jemné náušnice ve tvaru kapky v rose gold barvě. Elegantní a ženský design podtrhující váš styl.',
+   props:{'Materiál':'Rose gold kov + perly','Barva':'Rose gold, bílá','Délka':'3.5 cm','Háček':'Rose gold'}},
+];
+
+// ═══════════════════════════════
+// FILTER + LOAD MORE
+// ═══════════════════════════════
+let currentFilter = 'vse';
+const PAGE_SIZE = 4;
+
+// Uloží původní stav (první 8 karet) pro reset
+const INITIAL_VISIBLE_IDS = [1,2,3,4,5,6,7,8];
+
+function filterProducts(cat, btn) {
+  currentFilter = cat;
+  // Resetuj všechny extra karty na skryté
+  document.querySelectorAll('.product-card').forEach(card => {
+    const id = parseInt(card.dataset.id || '0');
+    const matches = cat === 'vse' || card.dataset.cat === cat;
+    const isInitial = INITIAL_VISIBLE_IDS.includes(id);
+
+    if (!matches) {
+      // Neshoduje se s filtrem — schovat
+      card.style.display = 'none';
+    } else if (isInitial) {
+      // Patří do první stránky — zobrazit
+      card.style.display = '';
+    } else {
+      // Extra karta — schovat, reset
+      card.style.display = 'none';
+      delete card.dataset.extra;
+    }
+  });
+
+  if (btn) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  updateLoadMoreVisibility();
+  updateCollapseVisibility();
+}
+
+function filterProductsAndScroll(cat) {
+  // Najdi správné tab tlačítko a aktivuj ho
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    const txt = t.textContent.trim().toLowerCase();
+    const isMatch = (cat === 'vse' && (txt === 'vše' || txt === 'vse'))
+      || (cat === 'naramky' && txt.includes('ráram'))
+      || (cat === 'nausnice' && txt.includes('áušn'));
+    t.classList.toggle('active', isMatch);
+  });
+  filterProducts(cat, null);
+  document.getElementById('produkty').scrollIntoView({ behavior: 'smooth' });
+}
+
+function loadMore() {
+  let shown = 0;
+  document.querySelectorAll('.product-card').forEach(card => {
+    if (shown >= PAGE_SIZE) return;
+    if (card.style.display !== 'none') return; // already visible
+    const matches = currentFilter === 'vse' || card.dataset.cat === currentFilter;
+    if (matches) {
+      card.style.display = '';
+      card.dataset.extra = 'true';
+      shown++;
+    }
+  });
+  updateLoadMoreVisibility();
+  updateCollapseVisibility();
+}
+
+function collapseProducts() {
+  // Schovat všechny extra karty
+  document.querySelectorAll('.product-card[data-extra="true"]').forEach(card => {
+    card.style.display = 'none';
+    delete card.dataset.extra;
+  });
+  updateLoadMoreVisibility();
+  updateCollapseVisibility();
+  document.getElementById('produkty').scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateLoadMoreVisibility() {
+  let hasHidden = false;
+  document.querySelectorAll('.product-card').forEach(card => {
+    const matches = currentFilter === 'vse' || card.dataset.cat === currentFilter;
+    if (matches && card.style.display === 'none') hasHidden = true;
+  });
+  const btn = document.getElementById('btnLoadMore');
+  if (btn) btn.style.display = hasHidden ? 'inline-block' : 'none';
+}
+
+function updateCollapseVisibility() {
+  const hasExtra = document.querySelectorAll('.product-card[data-extra="true"]').length > 0;
+  const btn = document.getElementById('btnCollapse');
+  if (btn) btn.style.display = hasExtra ? 'inline-block' : 'none';
+}
+
+// ═══════════════════════════════
+// PRODUCT DETAIL MODAL
+// ═══════════════════════════════
+let currentSlide = 0;
+let currentProductImgs = [];
+
+function openProduct(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  currentProductImgs = p.imgs;
+  currentSlide = 0;
+  const slides = document.getElementById('pdetailSlides');
+  slides.style.transition = 'none';
+  slides.style.transform = 'translateX(0)';
+  slides.innerHTML = p.imgs.map(src =>
+    '<div class="pdetail-slide"><img src="' + src + '" alt="' + p.name + '"/></div>'
+  ).join('');
+  const dots = document.getElementById('pdetailDots');
+  dots.innerHTML = p.imgs.map((_, i) =>
+    '<button class="pdetail-dot ' + (i===0?'active':'') + '" onclick="goToSlide(' + i + ')"></button>'
+  ).join('');
+  document.querySelector('.pdetail-prev').style.display = p.imgs.length > 1 ? 'flex' : 'none';
+  document.querySelector('.pdetail-next').style.display = p.imgs.length > 1 ? 'flex' : 'none';
+  const propsHtml = Object.entries(p.props).map(([k, val]) =>
+    '<div class="pdetail-prop"><strong>' + k + '</strong><span>' + val + '</span></div>'
+  ).join('');
+  document.getElementById('pdetailInfo').innerHTML =
+    (p.badge ? '<div class="pdetail-badge">' + p.badge + '</div>' : '') +
+    '<h2 class="pdetail-name">' + p.name + '</h2>' +
+    '<p class="pdetail-material">' + p.material + '</p>' +
+    '<div class="pdetail-price">' + p.price + ' Kč</div>' +
+    '<p class="pdetail-desc">' + p.desc + '</p>' +
+    '<hr class="pdetail-divider"/>' +
+    '<div class="pdetail-props">' + propsHtml + '</div>' +
+    '<button class="pdetail-add-btn" onclick="addToCartById(this,' + p.id + ')">Přidat do košíku</button>';
+  document.getElementById('pdetailOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setupSwipe();
+}
+
+function closePdetail() {
+  document.getElementById('pdetailOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closePdetailOutside(e) {
+  if (e.target === document.getElementById('pdetailOverlay')) closePdetail();
+}
+function slideGallery(dir) {
+  currentSlide = (currentSlide + dir + currentProductImgs.length) % currentProductImgs.length;
+  updateGallery();
+}
+function goToSlide(idx) { currentSlide = idx; updateGallery(); }
+function updateGallery() {
+  const slides = document.getElementById('pdetailSlides');
+  slides.style.transition = 'transform .35s ease';
+  slides.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+  document.querySelectorAll('.pdetail-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+}
+function setupSwipe() {
+  const gallery = document.getElementById('pdetailGallery');
+  let startX = 0;
+  gallery.ontouchstart = e => { startX = e.touches[0].clientX; };
+  gallery.ontouchend = e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) slideGallery(diff > 0 ? 1 : -1);
+  };
+}
+
+// addToCartById — přidá z PRODUCTS dat
+function addToCartById(btn, id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  // close detail modal if open
+  closePdetail();
+  const existing = cart.find(i => i.id === id);
+  if (existing) existing.qty++;
+  else cart.push({ id: p.id, name: p.name, price: p.price, img: p.imgs[0], qty: 1 });
+  updateCartBadge(); renderCart();
+  showNotification(p.name + ' přidán/a do košíku');
+  btn.textContent = '✓'; btn.style.background = '#3d2a26';
+  setTimeout(() => { btn.textContent = '+'; btn.style.background = ''; }, 1200);
+}
+
+// ═══════════════════════════════════════
+// KOŠÍK
+// ═══════════════════════════════════════
+let cart = [];
+let selectedShipping = null;
+let selectedPayment = null;
+let shippingPrice = 0;
+let codFee = 0;
+
+function toggleCart() {
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+function closeCartOutside(e) {
+  if (e.target === e.currentTarget) toggleCart();
+}
+
+function addToCart(btn, name, price, img) {
+  const existing = cart.find(i => i.name === name);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id: Date.now(), name, price, img: img, qty: 1 });
+  }
+  updateCartBadge();
+  renderCart();
+  btn.textContent = '✓';
+  btn.style.background = '#3d2a26';
+  setTimeout(() => { btn.textContent = '+'; btn.style.background = ''; }, 1200);
+  showNotification(name + ' přidán/a do košíku');
+}
+
+function changeQty(index, delta) {
+  cart[index].qty += delta;
+  if (cart[index].qty <= 0) cart.splice(index, 1);
+  updateCartBadge();
+  renderCart();
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCartBadge();
+  renderCart();
+}
+
+function updateCartBadge() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartBadge').textContent = total;
+}
+
+function getCartSubtotal() {
+  return cart.reduce((s, i) => s + i.price * i.qty, 0);
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  const footer = document.getElementById('cartFooterBox');
+
+  if (cart.length === 0) {
+    container.innerHTML = '<div class="cart-empty">🛍️<br><span>Košík je prázdný</span></div>';
+    footer.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = 'block';
+  container.innerHTML = cart.map((item, i) => `
+    <div class="cart-item">
+      <div class="cart-item-img"><img src="${item.img}" alt="${item.name}"/></div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-price">${item.price} Kč / ks</div>
+        <div class="cart-item-qty">
+          <button onclick="changeQty(${i},-1)">−</button>
+          <span>${item.qty}</span>
+          <button onclick="changeQty(${i},1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart(${i})">✕</button>
+    </div>
+  `).join('');
+
+  const subtotal = getCartSubtotal();
+  document.getElementById('cartSubtotal').textContent = subtotal + ' Kč';
+  document.getElementById('cartTotal').textContent = subtotal + ' Kč';
+}
+
+// ═══════════════════════════════════════
+// CHECKOUT FLOW
+// ═══════════════════════════════════════
+function startCheckout() {
+  if (cart.length === 0) return;
+  toggleCart();
+  document.getElementById('checkoutModal').classList.add('open');
+  goToStep(1);
+}
+
+function closeCheckout() {
+  document.getElementById('checkoutModal').classList.remove('open');
+}
+
+function goToStep(n) {
+  document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+
+  // Update dots
+  [1,2,3,4].forEach(i => {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.remove('active','done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  });
+  [12,23,34].forEach((pair,idx) => {
+    const line = document.getElementById('line' + pair);
+    if (line) line.classList.toggle('done', idx+1 < n);
+  });
+}
+
+// ─── Krok 1 → 2 ───
+function goToStep2() {
+  const fields = ['f_jmeno','f_prijmeni','f_email','f_telefon','f_ulice','f_mesto','f_psc'];
+  let valid = true;
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('error');
+    if (!el.value.trim()) { el.classList.add('error'); valid = false; }
+  });
+  if (!valid) { showNotification('Vyplňte prosím všechna povinná pole'); return; }
+  goToStep(2);
+  renderOrderSummary('orderSummaryStep2');
+}
+
+// ─── Výběr dopravy ───
+function selectShipping(type, price) {
+  selectedShipping = type;
+  shippingPrice = price;
+  document.querySelectorAll('.shipping-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('ship_' + type).classList.add('selected');
+  document.getElementById('btnStep2Next').disabled = false;
+  renderOrderSummary('orderSummaryStep2');
+}
+
+// ─── Krok 2 → 3 ───
+function goToStep3() {
+  if (!selectedShipping) return;
+  goToStep(3);
+  renderOrderSummary('orderSummaryStep3');
+}
+
+// ─── Výběr platby ───
+function selectPayment(type) {
+  selectedPayment = type;
+  codFee = type === 'cod' ? 39 : 0;
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('pay_' + type).classList.add('selected');
+  document.getElementById('btnStep3Next').disabled = false;
+  renderOrderSummary('orderSummaryStep3');
+}
+
+// ─── Krok 3 → 4 ───
+function goToStep4() {
+  if (!selectedPayment) return;
+
+  // Fill review
+  const contact = `${v('f_jmeno')} ${v('f_prijmeni')}<br>${v('f_email')}<br>${v('f_telefon')}<br>${v('f_ulice')}, ${v('f_psc')} ${v('f_mesto')}`;
+  document.getElementById('reviewContact').innerHTML = contact;
+
+  const shipNames = { zasilkovna:'Zásilkovna — výdejní místo (79 Kč)', zasilkovna_dom:'Zásilkovna — domů (99 Kč)', osobni:'Osobní odběr (Zdarma)' };
+  document.getElementById('reviewShipping').textContent = shipNames[selectedShipping];
+
+  const payNames = { card:'Platební karta (bez příplatku)', cod:'Dobírka (+39 Kč)' };
+  document.getElementById('reviewPayment').textContent = payNames[selectedPayment];
+
+  renderOrderSummary('orderSummaryFinal');
+  goToStep(4);
+}
+
+function v(id) { return document.getElementById(id).value.trim(); }
+
+// ─── Render order summary ───
+function renderOrderSummary(containerId) {
+  const subtotal = getCartSubtotal();
+  const total = subtotal + shippingPrice + codFee;
+  const items = cart.map(i =>
+    `<div class="order-summary-item"><span>${i.name} × ${i.qty}</span><span>${i.price * i.qty} Kč</span></div>`
+  ).join('');
+
+  let extra = '';
+  if (shippingPrice > 0) extra += `<div class="order-summary-item"><span>Doprava</span><span>${shippingPrice} Kč</span></div>`;
+  if (shippingPrice === 0 && selectedShipping) extra += `<div class="order-summary-item"><span>Doprava</span><span>Zdarma</span></div>`;
+  if (codFee > 0) extra += `<div class="order-summary-item"><span>Dobírka</span><span>${codFee} Kč</span></div>`;
+
+  document.getElementById(containerId).innerHTML = `
+    ${items}${extra}
+    <div class="order-summary-total"><span><strong>Celkem k úhradě</strong></span><span><strong>${total} Kč</strong></span></div>
+  `;
+}
+
+// ─── DOKONČENÍ OBJEDNÁVKY ───
+async function confirmOrder() {
+  const btn = document.getElementById('btnConfirm');
+  btn.disabled = true;
+  btn.textContent = 'Zpracovávám...';
+
+  const orderData = {
+    order_num: 'PGG-' + Date.now().toString().slice(-6),
+    jmeno: v('f_jmeno'),
+    prijmeni: v('f_prijmeni'),
+    email: v('f_email'),
+    telefon: v('f_telefon'),
+    adresa: `${v('f_ulice')}, ${v('f_psc')} ${v('f_mesto')}`,
+    doprava: selectedShipping,
+    platba: selectedPayment,
+    items_text: cart.map(i => `${i.name} × ${i.qty} = ${i.price * i.qty} Kč`).join('\n'),
+    subtotal: getCartSubtotal(),
+    shipping_price: shippingPrice,
+    cod_fee: codFee,
+    total: getCartSubtotal() + shippingPrice + codFee,
+  };
+
+  if (selectedPayment === 'card') {
+    // ── Platba kartou přes Stripe ──
+    await payWithStripe(orderData);
+  } else {
+    // ── Dobírka / osobní odběr — jen odešli e-maily ──
+    await sendEmails(orderData);
+    document.getElementById('successOrderNum').textContent = '#' + orderData.order_num;
+    goToStep('Success');
+    cart = [];
+    updateCartBadge();
+    renderCart();
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✓ Dokončit objednávku';
+}
+
+// ─── STRIPE CHECKOUT ───
+async function payWithStripe(orderData) {
+  document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('stepLoading').classList.add('active');
+
+  try {
+    const stripe = Stripe(CONFIG.STRIPE_PUBLISHABLE_KEY);
+
+    // Sestavíme line_items pro Stripe Checkout
+    const lineItems = cart.map(item => ({
+      price_data: {
+        currency: 'czk',
+        product_data: { name: item.name },
+        unit_amount: item.price * 100, // Stripe počítá v haléřích
+      },
+      quantity: item.qty,
+    }));
+
+    // Přidáme dopravu jako položku
+    if (shippingPrice > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'czk',
+          product_data: { name: 'Doprava' },
+          unit_amount: shippingPrice * 100,
+        },
+        quantity: 1,
+      });
+    }
+    if (codFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'czk',
+          product_data: { name: 'Dobírka' },
+          unit_amount: codFee * 100,
+        },
+        quantity: 1,
+      });
+    }
+
+    // POZNÁMKA: Stripe Checkout Session se standardně vytváří na serveru.
+    // Pro čistě frontendové řešení bez serveru doporučujeme použít
+    // Stripe Payment Links — vytvořte je v Stripe dashboardu a vložte URL sem.
+    // Alternativně nasaďte na Vercel s bezplatnou serverless funkcí.
+    //
+    // Prozatím uložíme objednávku a odešleme e-maily, Stripe platbu
+    // zákazníkovi pošleme odkazem v potvrzovacím e-mailu.
+    //
+    await sendEmails(orderData, true); // true = pošli platební odkaz v emailu
+    document.getElementById('successOrderNum').textContent = '#' + orderData.order_num;
+    goToStep('Success');
+    cart = [];
+    updateCartBadge();
+    renderCart();
+
+  } catch(err) {
+    console.error(err);
+    showNotification('Chyba při platbě. Zkuste prosím znovu.');
+    goToStep(4);
+  }
+}
+
+// ─── EMAILJS ───
+async function sendEmails(orderData, stripeLink = false) {
+  // Inicializace EmailJS
+  if (typeof emailjs === 'undefined') {
+    console.warn('EmailJS není načteno — e-maily nejsou odesílány v náhledu.');
+    return;
+  }
+
+  emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+
+  const templateParams = {
+    to_email: orderData.email,
+    to_name: orderData.jmeno,
+    order_num: orderData.order_num,
+    items: orderData.items_text,
+    adresa: orderData.adresa,
+    doprava: orderData.doprava,
+    platba: orderData.platba,
+    total: orderData.total + ' Kč',
+    owner_email: CONFIG.OWNER_EMAIL,
+    telefon: orderData.telefon,
+  };
+
+  try {
+    // E-mail zákazníkovi
+    await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_CUSTOMER, templateParams);
+    // E-mail vám
+    await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_OWNER, {
+      ...templateParams,
+      to_email: CONFIG.OWNER_EMAIL,
+      customer_email: orderData.email,
+    });
+  } catch(err) {
+    console.error('EmailJS error:', err);
+    // Objednávka se i tak zpracuje — jen e-mail neodešel
+  }
+}
+
+// ─── HELPERS ───
+function goToStep(n) {
+  document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  if (typeof n === 'number') {
+    [1,2,3,4].forEach(i => {
+      const dot = document.getElementById('dot' + i);
+      dot.classList.remove('active','done');
+      if (i < n) dot.classList.add('done');
+      else if (i === n) dot.classList.add('active');
+    });
+  }
+}
+
+function resetAfterOrder() {
+  selectedShipping = null;
+  selectedPayment = null;
+  shippingPrice = 0;
+  codFee = 0;
+  ['f_jmeno','f_prijmeni','f_email','f_telefon','f_ulice','f_mesto','f_psc'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+function showNotification(msg) {
+  const n = document.getElementById('notification');
+  n.textContent = '✓ ' + msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2600);
+}
+
+function subscribeNewsletter(e) {
+  e.preventDefault();
+  e.target.querySelector('input').value = '';
+  showNotification('Přihlášení úspěšné! Těšíme se 💌');
+}
+
+// Zavření modalu klávesou Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closePdetail(); closeCheckout(); }
+  if (e.key === 'ArrowRight') { if (document.getElementById('pdetailOverlay').classList.contains('open')) slideGallery(1); }
+  if (e.key === 'ArrowLeft') { if (document.getElementById('pdetailOverlay').classList.contains('open')) slideGallery(-1); }
+});
+
+// Init EmailJS
+emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+updateLoadMoreVisibility();
+
+// Pokud se vrátí z Stripe se ?order=success
+if (window.location.search.includes('order=success')) {
+  showNotification('Platba proběhla úspěšně! Děkujeme 🎉');
+}
+</script>
+
+</body>
+</html>
