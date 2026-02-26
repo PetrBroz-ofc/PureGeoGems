@@ -539,7 +539,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
       <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Domluvíme se</strong><p>Pošlu vám návrh a ukázku materiálů před výrobou.</p></div></div>
       <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Dostanete unikát</strong><p>Váš šperk vyrobím do 3–5 dnů v hezké dárkové krabičce.</p></div></div>
     </div>
-    <a href="mailto:brozpetr.bp@gmail.com" class="btn-primary" style="margin-top:30px;display:inline-block;">Napsat dotaz ✉️</a>
+    <a href="/cdn-cgi/l/email-protection#92f0e0fde8e2f7e6e0bcf0e2d2f5fff3fbfebcf1fdff" class="btn-primary" style="margin-top:30px;display:inline-block;">Napsat dotaz ✉️</a>
   </div>
 </section>
 
@@ -577,7 +577,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
   </div>
   <div class="footer-col"><h4>Kolekce</h4><ul><li><a href="#">Náramky</a></li><li><a href="#">Náušnice</a></li><li><a href="#">Dárkové sety</a></li><li><a href="#">Na míru</a></li></ul></div>
   <div class="footer-col"><h4>Info</h4><ul><li><a href="#">O nás</a></li><li><a href="#">Doprava & vrácení</a></li><li><a href="#">Péče o šperky</a></li></ul></div>
-  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="mailto:brozpetr.bp@gmail.com">brozpetr.bp@gmail.com</a></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li></ul></div>
+  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="/cdn-cgi/l/email-protection#88eafae7f2f8edfcfaa6eaf8c8efe5e9e1e4a6ebe7e5"><span class="__cf_email__" data-cfemail="d4b6a6bbaea4b1a0a6fab6a494b3b9b5bdb8fab7bbb9">[email&#160;protected]</span></a></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li></ul></div>
 </footer>
 <div class="footer-bottom">
   <p>Vytvořil Petr Brož</p>
@@ -812,7 +812,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
 <!-- ══════════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════════ -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════
 // ⚙️  KONFIGURACE — vyplňte své klíče
 // ═══════════════════════════════════════
@@ -1318,60 +1318,28 @@ async function confirmOrder() {
 async function payWithStripe(orderData) {
   document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
   document.getElementById('stepLoading').classList.add('active');
-
   try {
-    const stripe = Stripe(CONFIG.STRIPE_PUBLISHABLE_KEY);
-
-    // Sestavíme line_items pro Stripe Checkout
-    const lineItems = cart.map(item => ({
-      price_data: {
-        currency: 'czk',
-        product_data: { name: item.name },
-        unit_amount: item.price * 100, // Stripe počítá v haléřích
-      },
-      quantity: item.qty,
-    }));
-
-    // Přidáme dopravu jako položku
-    if (shippingPrice > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'czk',
-          product_data: { name: 'Doprava' },
-          unit_amount: shippingPrice * 100,
-        },
-        quantity: 1,
-      });
+    // Zavolá Vercel serverless funkci → vytvoří Stripe Checkout Session
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cart,
+        shippingPrice: shippingPrice,
+        codFee: codFee,
+        customerEmail: orderData.email,
+      }),
+    });
+    const data = await response.json();
+    if (data.url) {
+      // Ulož objednávku před přesměrováním na Stripe
+      sessionStorage.setItem('pendingOrder', JSON.stringify(orderData));
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Neznámá chyba');
     }
-    if (codFee > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'czk',
-          product_data: { name: 'Dobírka' },
-          unit_amount: codFee * 100,
-        },
-        quantity: 1,
-      });
-    }
-
-    // POZNÁMKA: Stripe Checkout Session se standardně vytváří na serveru.
-    // Pro čistě frontendové řešení bez serveru doporučujeme použít
-    // Stripe Payment Links — vytvořte je v Stripe dashboardu a vložte URL sem.
-    // Alternativně nasaďte na Vercel s bezplatnou serverless funkcí.
-    //
-    // Prozatím uložíme objednávku a odešleme e-maily, Stripe platbu
-    // zákazníkovi pošleme odkazem v potvrzovacím e-mailu.
-    //
-    await sendEmails(orderData, true); // true = pošli platební odkaz v emailu
-    document.getElementById('successOrderNum').textContent = '#' + orderData.order_num;
-    goToStep('Success');
-    cart = [];
-    updateCartBadge();
-    renderCart();
-
   } catch(err) {
-    console.error(err);
-    showNotification('Chyba při platbě. Zkuste prosím znovu.');
+    showNotification('Chyba platby: ' + err.message);
     goToStep(4);
   }
 }
@@ -1458,13 +1426,44 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') { if (document.getElementById('pdetailOverlay').classList.contains('open')) slideGallery(-1); }
 });
 
-// Init EmailJS
-emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
-updateLoadMoreVisibility();
-
-// Pokud se vrátí z Stripe se ?order=success
+// Návrat ze Stripe po úspěšné platbě
 if (window.location.search.includes('order=success')) {
+  const pending = sessionStorage.getItem('pendingOrder');
+  if (pending) {
+    const orderData = JSON.parse(pending);
+    sessionStorage.removeItem('pendingOrder');
+    sendEmails(orderData);
+    setTimeout(() => {
+      document.getElementById('checkoutModal').classList.add('open');
+      document.getElementById('successOrderNum').textContent = '#' + orderData.order_num;
+      goToStep('Success');
+    }, 300);
+  }
   showNotification('Platba proběhla úspěšně! Děkujeme 🎉');
+}
+if (window.location.search.includes('order=cancel')) {
+  showNotification('Platba byla zrušena.');
+}
+
+// In
+
+// Návrat ze Stripe po úspěšné platbě
+if (window.location.search.includes('order=success')) {
+  const pending = sessionStorage.getItem('pendingOrder');
+  if (pending) {
+    const orderData = JSON.parse(pending);
+    sessionStorage.removeItem('pendingOrder');
+    sendEmails(orderData);
+    setTimeout(() => {
+      document.getElementById('checkoutModal').classList.add('open');
+      document.getElementById('successOrderNum').textContent = '#' + orderData.order_num;
+      goToStep('Success');
+    }, 300);
+  }
+  showNotification('Platba proběhla úspěšně! Děkujeme 🎉');
+}
+if (window.location.search.includes('order=cancel')) {
+  showNotification('Platba byla zrušena.');
 }
 </script>
 
