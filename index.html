@@ -43,7 +43,7 @@ nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-i
 .hero-right { position:relative; overflow:hidden; background:var(--blush); }
 .hero-right img { width:100%; height:100%; object-fit:cover; display:block; }
 
-.hero-video { width:100%; height:100%; object-fit:cover; display:block; }
+.hero-video { width:100%; height:100%; object-fit:cover; object-position:center 25%; display:block; }
 
 .floating-badge { position:absolute; bottom:40px; left:-20px; background:white; border-radius:14px; padding:14px 22px; box-shadow:0 8px 32px rgba(0,0,0,.1); display:flex; align-items:center; gap:12px; }
 .floating-badge-icon { width:38px; height:38px; background:var(--blush); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
@@ -350,7 +350,8 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
 <nav>
   <a href="#" class="nav-logo">Pure<span>Geo</span>Gems</a>
   <ul class="nav-links">
-    <li><a href="#produkty">Kolekce</a></li>
+    <li><a href="#kolekce">Kolekce</a></li>
+    <li><a href="#produkty">Dostupné kousky</a></li>
     <li><a href="#naruci">Na míru</a></li>
     <li><a href="#o-nas">O nás</a></li>
     <li><a href="#kontakt">Kontakt</a></li>
@@ -367,13 +368,13 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
     <h1 class="hero-title">Šperky, které <em>vyprávějí</em> příběh</h1>
     <p class="hero-desc">Každý náramek a náušnice jsou vytvořeny s péčí přímo u nás doma. Unikátní kousky z pečlivě vybraných materiálů — pro vás nebo jako nezapomenutelný dárek.</p>
     <div class="hero-btns">
-      <a href="#produkty" class="btn-primary">Prohlédnout kolekci</a>
+      <a href="#kolekce" class="btn-primary">Prohlédnout kolekci</a>
       <a href="#naruci" class="btn-ghost">Vytvořit na míru</a>
     </div>
   </div>
   <div class="hero-right">
     <video class="hero-video" autoplay muted loop playsinline>
-      <source src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-jewelry-with-beads-18456-large.mp4" type="video/mp4">
+      <source src="model-nausnice.mp4" type="video/mp4">
       <source src="https://assets.mixkit.co/videos/preview/mixkit-handcrafted-jewelry-close-up-18456-large.mp4" type="video/mp4">
       <!-- Záložní fotka pokud video nefunguje -->
       <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=900&q=80" alt="PureGeoGems šperky"/>
@@ -389,7 +390,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
 </section>
 
 <!-- ═══ CATEGORIES ═══ -->
-<section class="categories">
+<section class="categories" id="kolekce"></section>
   <div class="section-header">
     <span class="section-tag">✦ Co nabízíme</span>
     <h2 class="section-title">Naše <em>kolekce</em></h2>
@@ -397,7 +398,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
   <div class="cat-grid">
     <div class="cat-card" onclick="filterProductsAndScroll('naramky')">
       <div class="cat-badge">5 druhů</div>
-      <img src="https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=600&q=80" alt="Náramky"/>
+      <img src="https://i.pinimg.com/1200x/f6/1f/a9/f61fa95d7c398cc8d0b7d3627c061946.jpg" alt="Náramky"/>
       <div class="cat-overlay">
         <h3 class="cat-name">Náramky</h3>
         <p class="cat-count">Ručně navlékané · na míru</p>
@@ -407,7 +408,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
     </div>
     <div class="cat-card" onclick="filterProductsAndScroll('nausnice')">
       <div class="cat-badge">4 druhy</div>
-      <img src="https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=600&q=80" alt="Náušnice"/>
+      <img src="https://i.pinimg.com/736x/f0/cc/28/f0cc2876aa1b8783b8b7ad9394093de8.jpg" alt="Náušnice"/>
       <div class="cat-overlay">
         <h3 class="cat-name">Náušnice</h3>
         <p class="cat-count">Lehké · chirurgická ocel</p>
@@ -417,7 +418,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
     </div>
     <div class="cat-card" onclick="filterProductsAndScroll('darcekove')">
       <div class="cat-badge">Dárky</div>
-      <img src="https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600&q=80" alt="Dárkové sety"/>
+      <img src="https://i.pinimg.com/1200x/4d/ab/c8/4dabc88901f3bf3dd5163bdabffc515b.jpg" alt="Dárkové sety"/>
       <div class="cat-overlay">
         <h3 class="cat-name">Dárkové sety</h3>
         <p class="cat-count">Ladící soupravy · dárková krabička</p>
@@ -527,10 +528,10 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
 
 <!-- ═══ CUSTOM ═══ -->
 <section class="custom-section" id="naruci">
-  <div class="custom-img"><img src="https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80" alt="Výroba na míru"/></div>
+  <div class="custom-img"><img src="https://i.pinimg.com/1200x/f9/fa/b0/f9fab0db56fbd8b1fa1b8c7ecb6a0df3.jpg" alt="Výroba na míru"/></div>
   <div class="custom-content">
     <div class="section-header">
-      <span class="section-tag">✦ Vaše přání je náš rozkaz</span>
+      <span class="section-tag">✦ Náramky na míru</span>
       <h2 class="section-title">Náramek <em>přesně pro vás</em></h2>
     </div>
     <p style="color:var(--text-light);font-size:.91rem;line-height:1.8;font-weight:300;margin-top:8px;">Vytvořte si svůj vlastní šperk. Vyberete barvy, délku, styl — a já ho pro vás s láskou ručně vyrobím.</p>
@@ -539,14 +540,14 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
       <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Domluvíme se</strong><p>Pošlu vám návrh a ukázku materiálů před výrobou.</p></div></div>
       <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Dostanete unikát</strong><p>Váš šperk vyrobím do 3–5 dnů v hezké dárkové krabičce.</p></div></div>
     </div>
-    <a href="/cdn-cgi/l/email-protection#92f0e0fde8e2f7e6e0bcf0e2d2f5fff3fbfebcf1fdff" class="btn-primary" style="margin-top:30px;display:inline-block;">Napsat dotaz ✉️</a>
+    <a href="#kontakt" class="btn-primary" style="margin-top:30px;display:inline-block;">Napsat dotaz </a>
   </div>
 </section>
 
 <!-- ═══ TESTIMONIALS ═══ -->
 <section class="testimonials" id="o-nas">
   <div class="section-header">
-    <span class="section-tag">✦ Co říkají zákaznice</span>
+    <span class="section-tag">✦ Co říkají zákaznici</span>
     <h2 class="section-title">Jejich <em>příběhy</em></h2>
   </div>
   <div class="test-grid">
@@ -562,7 +563,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
     <span class="section-tag">✦ Buďte první</span>
     <h2 class="section-title">Novinky a <em>inspirace</em></h2>
   </div>
-  <p class="newsletter-desc">Přihlaste se k odběru a dostávejte jako první informace o nových kouscích a akcích.</p>
+  <p class="newsletter-desc">Přihlaste se k odběru a dostávejte jako první informace o nových kouscích a akcích.</p><p><h2>Momentálně mimo provoz</h2></p>
   <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
     <input type="email" class="newsletter-input" placeholder="váš@email.cz">
     <button type="submit" class="newsletter-submit">Odebírat</button>
@@ -575,9 +576,9 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
     <a href="#" class="nav-logo">Pure<span>Geo</span>Gems</a>
     <p class="footer-desc">Ručně vyráběné šperky s láskou.<br>Každý kus je originálem z domácí dílny.</p>
   </div>
-  <div class="footer-col"><h4>Kolekce</h4><ul><li><a href="#">Náramky</a></li><li><a href="#">Náušnice</a></li><li><a href="#">Dárkové sety</a></li><li><a href="#">Na míru</a></li></ul></div>
-  <div class="footer-col"><h4>Info</h4><ul><li><a href="#">O nás</a></li><li><a href="#">Doprava & vrácení</a></li><li><a href="#">Péče o šperky</a></li></ul></div>
-  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="/cdn-cgi/l/email-protection#88eafae7f2f8edfcfaa6eaf8c8efe5e9e1e4a6ebe7e5"><span class="__cf_email__" data-cfemail="d4b6a6bbaea4b1a0a6fab6a494b3b9b5bdb8fab7bbb9">[email&#160;protected]</span></a></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li></ul></div>
+  <div class="footer-col"><h4>Kolekce</h4><ul><li><a href="#produkty">Náramky</a></li><li><a href="#produkty">Náušnice</a></li><li><a href="#produkty">Dárkové sety</a></li><li><a href="#naruci">Na míru</a></li></ul></div>
+  <div class="footer-col"><h4>Info</h4><ul><li><a href="#o-nas">O nás</a></li><li><a href="#">Doprava & vrácení</a></li><li><a href="#">Péče o šperky</a></li></ul></div>
+  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="#">brozpetr.bp@gmail.com</a></li></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">TikTok</a></li></ul></div>
 </footer>
 <div class="footer-bottom">
   <p>Vytvořil Petr Brož</p>
@@ -813,6 +814,8 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
      JAVASCRIPT
 ══════════════════════════════════════════ -->
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // hned na začátku scriptu, před vším ostatním
+emailjs.init('iXnU6HM3r6JUtqiF4');
 // ═══════════════════════════════════════
 // ⚙️  KONFIGURACE — vyplňte své klíče
 // ═══════════════════════════════════════
@@ -1352,21 +1355,26 @@ async function sendEmails(orderData, stripeLink = false) {
     return;
   }
 
-  emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+  
 
   const templateParams = {
-    to_email: orderData.email,
-    to_name: orderData.jmeno,
-    order_num: orderData.order_num,
-    items: orderData.items_text,
-    adresa: orderData.adresa,
-    doprava: orderData.doprava,
-    platba: orderData.platba,
-    total: orderData.total + ' Kč',
-    owner_email: CONFIG.OWNER_EMAIL,
-    telefon: orderData.telefon,
-  };
-
+  to_email: orderData.email,
+  to_name: orderData.jmeno,
+  order_num: orderData.order_num,
+  order_id: orderData.order_num,
+  customer_name: orderData.jmeno + ' ' + orderData.prijmeni,
+  customer_email: orderData.email,
+  order_date: new Date().toLocaleDateString('cs-CZ'),
+  order_items_html: orderData.items_text,
+  items: orderData.items_text,
+  order_total: orderData.total,
+  adresa: orderData.adresa,
+  doprava: orderData.doprava,
+  platba: orderData.platba,
+  total: orderData.total + ' Kč',
+  owner_email: CONFIG.OWNER_EMAIL,
+  telefon: orderData.telefon,
+};
   try {
     // E-mail zákazníkovi
     await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_CUSTOMER, templateParams);
