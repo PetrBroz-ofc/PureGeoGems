@@ -1349,44 +1349,47 @@ async function payWithStripe(orderData) {
 
 // ─── EMAILJS ───
 async function sendEmails(orderData, stripeLink = false) {
-  // Inicializace EmailJS
   if (typeof emailjs === 'undefined') {
-    console.warn('EmailJS není načteno — e-maily nejsou odesílány v náhledu.');
+    console.error('EmailJS neni nacteno!');
     return;
   }
 
-  
-
   const templateParams = {
-  to_email: orderData.email,
-  to_name: orderData.jmeno,
-  order_num: orderData.order_num,
-  order_id: orderData.order_num,
-  customer_name: orderData.jmeno + ' ' + orderData.prijmeni,
-  customer_email: orderData.email,
-  order_date: new Date().toLocaleDateString('cs-CZ'),
-  order_items_html: orderData.items_text,
-  items: orderData.items_text,
-  order_total: orderData.total,
-  adresa: orderData.adresa,
-  doprava: orderData.doprava,
-  platba: orderData.platba,
-  total: orderData.total + ' Kč',
-  owner_email: CONFIG.OWNER_EMAIL,
-  telefon: orderData.telefon,
-};
+    to_email:         orderData.email,
+    to_name:          orderData.jmeno,
+    order_num:        orderData.order_num,
+    order_id:         orderData.order_num,
+    customer_name:    orderData.jmeno + ' ' + orderData.prijmeni,
+    customer_email:   orderData.email,
+    order_date:       new Date().toLocaleDateString('cs-CZ'),
+    order_items_html: orderData.items_text,
+    items:            orderData.items_text,
+    order_total:      orderData.total,
+    adresa:           orderData.adresa,
+    doprava:          orderData.doprava,
+    platba:           orderData.platba,
+    total:            orderData.total + ' Kc',
+    owner_email:      CONFIG.OWNER_EMAIL,
+    telefon:          orderData.telefon,
+  };
+
   try {
-    // E-mail zákazníkovi
-    await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_CUSTOMER, templateParams);
-    // E-mail vám
-    await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_OWNER, {
-      ...templateParams,
-      to_email: CONFIG.OWNER_EMAIL,
-      customer_email: orderData.email,
-    });
+    const r1 = await emailjs.send(
+      CONFIG.EMAILJS_SERVICE_ID,
+      CONFIG.EMAILJS_TEMPLATE_CUSTOMER,
+      templateParams
+    );
+    console.log('Customer email OK:', r1.status);
+
+    const r2 = await emailjs.send(
+      CONFIG.EMAILJS_SERVICE_ID,
+      CONFIG.EMAILJS_TEMPLATE_OWNER,
+      { ...templateParams, to_email: CONFIG.OWNER_EMAIL, customer_email: orderData.email }
+    );
+    console.log('Owner email OK:', r2.status);
+
   } catch(err) {
-    console.error('EmailJS error:', err);
-    // Objednávka se i tak zpracuje — jen e-mail neodešel
+    console.error('EmailJS ERROR:', err);
   }
 }
 
