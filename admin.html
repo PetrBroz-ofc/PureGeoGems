@@ -121,8 +121,7 @@ body { font-family:'Jost',sans-serif; background:#f5f0ee; color:var(--text); }
   <div class="login-box">
     <div class="login-logo">Pure<span>Geo</span>Gems</div>
     <p class="login-sub">Admin panel</p>
-    <label>Email</label>
-    <input type="email" id="loginEmail" placeholder="vas@email.cz"/>
+    
     <label>Heslo</label>
     <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="login-btn" onclick="doLogin()">Přihlásit se</button>
@@ -235,77 +234,78 @@ body { font-family:'Jost',sans-serif; background:#f5f0ee; color:var(--text); }
 <div class="toast" id="toast"></div>
 
 <!-- Firebase SDK -->
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js';
+<script>
+const API = '';
+let authToken = sessionStorage.getItem('adminToken') || null;
 
-// ── FIREBASE CONFIG ──
-const firebaseConfig = {
-  apiKey: "AIzaSyAc0Li_NsLb2NY5zCEU5ONLCMw6fCnEl7o",
-  authDomain: "puregeo-gems.firebaseapp.com",
-  projectId: "puregeo-gems",
-  storageBucket: "puregeo-gems.firebasestorage.app",
-  messagingSenderId: "141896986437",
-  appId: "1:141896986437:web:36883ca8e8f277b432582c"
-};
+// ── CHECK LOGIN ──
+window.addEventListener('DOMContentLoaded', () => {
+  if (authToken) {
+    showAdmin();
+    loadProducts();
+  }
+});
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let products = [];
-let editingId = null;
-
-// ── AUTH ──
+// ── LOGIN ──
 window.doLogin = async () => {
-  const email = document.getElementById('loginEmail').value;
   const pass = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      authToken = data.token;
+      sessionStorage.setItem('adminToken', authToken);
+      showAdmin();
+      loadProducts();
+    } else {
+      errEl.style.display = 'block';
+    }
   } catch(e) {
     errEl.style.display = 'block';
   }
 };
 
-window.doLogout = () => signOut(auth);
+window.doLogout = () => {
+  sessionStorage.removeItem('adminToken');
+  authToken = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminScreen').style.display = 'none';
+};
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminScreen').style.display = 'block';
-    document.getElementById('adminUserEmail').textContent = user.email;
-    loadProducts();
-  } else {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('adminScreen').style.display = 'none';
-  }
-});
+function showAdmin() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminScreen').style.display = 'block';
+  document.getElementById('adminUserEmail').textContent = 'Admin';
+}
 
-// ── LOAD PRODUCTS ──
+// ── PRODUCTS ──
+let products = [];
+let editingId = null;
+
 async function loadProducts() {
   const list = document.getElementById('productsList');
   list.innerHTML = '<div class="loading">Načítám produkty...</div>';
   try {
-    const q = query(collection(db, 'products'), orderBy('name'));
-    const snap = await getDocs(q);
-    products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const res = await fetch('/api/products', {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    products = await res.json();
     renderProducts();
     updateStats();
   } catch(e) {
-    // Pokud není index, načti bez řazení
-    const snap = await getDocs(collection(db, 'products'));
-    products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderProducts();
-    updateStats();
+    list.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>Chyba načítání.</p></div>';
   }
 }
 
 function renderProducts() {
   const list = document.getElementById('productsList');
-  if (products.length === 0) {
+  if (!products.length) {
     list.innerHTML = '<div class="empty"><div class="empty-icon">💎</div><p>Žádné produkty. Přidej první!</p></div>';
     return;
   }
@@ -330,19 +330,16 @@ function renderProducts() {
 function updateStats() {
   document.getElementById('statTotal').textContent = products.length;
   document.getElementById('statInStock').textContent = products.filter(p => p.inStock !== false).length;
-  const cats = new Set(products.map(p => p.cat)).size;
-  document.getElementById('statCategories').textContent = cats || 0;
+  document.getElementById('statCategories').textContent = new Set(products.map(p => p.cat)).size || 0;
 }
 
 function catLabel(cat) {
   return cat === 'naramky' ? 'Náramky' : cat === 'nausnice' ? 'Náušnice' : cat === 'darcekove' ? 'Dárky' : cat || '—';
 }
 
-// ── MODAL ──
 window.openModal = (id = null) => {
   editingId = id;
   document.getElementById('modalTitle').textContent = id ? 'Upravit produkt' : 'Nový produkt';
-
   if (id) {
     const p = products.find(x => x.id === id);
     document.getElementById('fName').value = p.name || '';
@@ -360,7 +357,6 @@ window.openModal = (id = null) => {
     document.getElementById('fStock').value = 'true';
     document.getElementById('imgPreview').style.display = 'none';
   }
-
   document.getElementById('productModal').classList.add('open');
 };
 
@@ -376,31 +372,35 @@ window.previewImg = () => {
   else img.style.display = 'none';
 };
 
-// ── SAVE ──
 window.saveProduct = async () => {
   const name = document.getElementById('fName').value.trim();
   const price = parseInt(document.getElementById('fPrice').value);
   if (!name || !price) { showToast('Vyplň název a cenu!'); return; }
 
   const data = {
-    name,
-    price,
+    name, price,
     cat: document.getElementById('fCat').value,
     material: document.getElementById('fMaterial').value.trim(),
     desc: document.getElementById('fDesc').value.trim(),
     img: document.getElementById('fImg').value.trim(),
     badge: document.getElementById('fBadge').value.trim(),
     inStock: document.getElementById('fStock').value === 'true',
-    updatedAt: new Date().toISOString(),
   };
 
   try {
     if (editingId) {
-      await updateDoc(doc(db, 'products', editingId), data);
+      await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+        body: JSON.stringify({ id: editingId, ...data })
+      });
       showToast('Produkt upraven! ✓');
     } else {
-      data.createdAt = new Date().toISOString();
-      await addDoc(collection(db, 'products'), data);
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+        body: JSON.stringify(data)
+      });
       showToast('Produkt přidán! ✓');
     }
     closeModal();
@@ -410,19 +410,17 @@ window.saveProduct = async () => {
   }
 };
 
-// ── DELETE ──
 window.deleteProduct = async (id) => {
-  if (!confirm('Opravdu smazat tento produkt?')) return;
-  try {
-    await deleteDoc(doc(db, 'products', id));
-    showToast('Produkt smazán.');
-    loadProducts();
-  } catch(e) {
-    showToast('Chyba: ' + e.message);
-  }
+  if (!confirm('Opravdu smazat?')) return;
+  await fetch('/api/products', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+    body: JSON.stringify({ id })
+  });
+  showToast('Smazáno.');
+  loadProducts();
 };
 
-// ── TOAST ──
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -431,7 +429,6 @@ function showToast(msg) {
 }
 window.showToast = showToast;
 
-// Close modal on outside click
 document.getElementById('productModal').addEventListener('click', e => {
   if (e.target === document.getElementById('productModal')) closeModal();
 });
