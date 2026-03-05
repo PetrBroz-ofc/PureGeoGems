@@ -1,4 +1,3 @@
-import formidable from 'formidable';
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
@@ -13,12 +12,6 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -40,34 +33,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-  // Zpracujeme FormData
-  const form = formidable({});
-  
-  const [fields, files] = await form.parse(req);
-  
-  // Z fields dostaneme textová data
-  const productData = {
-    name: fields.name?.[0] || '',
-    price: parseFloat(fields.price?.[0] || 0),
-    category: fields.category?.[0] || '',
-    material: fields.material?.[0] || '',
-    description: fields.description?.[0] || '',
-    badge: fields.badge?.[0] || '',
-    inStock: fields.inStock?.[0] === 'true',
-    createdAt: new Date().toISOString()
-  };
-  
-  // Zatím dáme placeholder obrázek
-  productData.imageUrl = 'https://via.placeholder.com/300';
-  
-  // Uložíme do Firestore
-  const ref = await db.collection('products').add(productData);
-  
-  return res.status(200).json({ 
-    id: ref.id,
-    message: 'Produkt uložen (bez fotky - připravujeme Cloudinary)'
-  });
-}
+      const data = { ...req.body, createdAt: new Date().toISOString() };
+      const ref = await db.collection('products').add(data);
+      return res.status(200).json({ id: ref.id });
+    }
 
     if (req.method === 'PUT') {
       const { id, ...data } = req.body;
