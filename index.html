@@ -508,7 +508,7 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
   </div>
   <div class="footer-col"><h4>Kolekce</h4><ul><li><a href="#produkty">Náramky</a></li><li><a href="#produkty">Náušnice</a></li><li><a href="#produkty">Dárkové sety</a></li><li><a href="#naruci">Na míru</a></li></ul></div>
   <div class="footer-col"><h4>Info</h4><ul><li><a href="#o-nas">O nás</a></li><li><a href="#">Doprava & vrácení</a></li><li><a href="#">Péče o šperky</a></li></ul></div>
-  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="#">brozpetr.bp@gmail.com</a></li></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">TikTok</a></li></ul></div>
+  <div class="footer-col"><h4>Kontakt</h4><ul><li><a href="#"><span class="__cf_email__" data-cfemail="6a081805101a0f1e1844081a2a0d070b030644090507">[email&#160;protected]</span></a></li></li><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">TikTok</a></li></ul></div>
 </footer>
 <div class="footer-bottom">
   <p>Vytvořil Petr Brož</p>
@@ -743,7 +743,50 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
 <!-- ══════════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════════ -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
+// ═══════════════════════════════
+// NAČÍTÁNÍ PRODUKTŮ Z FIREBASE
+// ═══════════════════════════════
+async function loadProductsFromAPI() {
+  try {
+    const res = await fetch('/api/products-public');
+    if (!res.ok) return;
+    const firebaseProducts = await res.json();
+    if (firebaseProducts && firebaseProducts.length > 0) {
+      PRODUCTS.length = 0;
+      firebaseProducts.forEach(p => PRODUCTS.push(p));
+      renderProductsFromFirebase();
+    }
+  } catch(e) {
+    console.log('Firebase nedostupny, pouzivam staticke produkty');
+  }
+}
+
+function renderProductsFromFirebase() {
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = PRODUCTS.map(p => `
+    <div class="product-card" data-cat="${p.cat}" data-id="${p.id}" onclick="openProduct('${p.id}')">
+      <div class="product-img">
+        <img src="${p.img || 'https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=400&q=60'}" alt="${p.name}" loading="lazy"/>
+        ${p.badge ? '<div class="product-badge">' + p.badge + '</div>' : ''}
+        <button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button>
+      </div>
+      <div class="product-info">
+        <h3 class="product-name">${p.name}</h3>
+        <p class="product-material">${p.material || ''}</p>
+        <div class="product-bottom">
+          <span class="product-price">${p.price} Kč</span>
+          <button class="product-add" onclick="event.stopPropagation();addToCartById(this,'${p.id}')">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  updateLoadMoreVisibility();
+  updateCollapseVisibility();
+}
+
+loadProductsFromAPI();
+</script><script>
   // hned na začátku scriptu, před vším ostatním
 emailjs.init('iXnU6HM3r6JUtqiF4');
 // ═══════════════════════════════════════
@@ -933,25 +976,26 @@ let currentSlide = 0;
 let currentProductImgs = [];
 
 function openProduct(id) {
-  const p = PRODUCTS.find(x => x.id === id);
+  const p = PRODUCTS.find(x => x.id == id || x.id === id);
   if (!p) return;
-  currentProductImgs = p.imgs;
+  const imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : ['https://images.unsplash.com/photo-1573408301185-9519f94815e5?w=800&q=80']);
+  currentProductImgs = imgs;
   currentSlide = 0;
   const slides = document.getElementById('pdetailSlides');
   slides.style.transition = 'none';
   slides.style.transform = 'translateX(0)';
-  slides.innerHTML = p.imgs.map(src =>
+  slides.innerHTML = imgs.map(src =>
     '<div class="pdetail-slide"><img src="' + src + '" alt="' + p.name + '"/></div>'
   ).join('');
   const dots = document.getElementById('pdetailDots');
-  dots.innerHTML = p.imgs.map((_, i) =>
+  dots.innerHTML = imgs.map((_, i) =>
     '<button class="pdetail-dot ' + (i===0?'active':'') + '" onclick="goToSlide(' + i + ')"></button>'
   ).join('');
-  document.querySelector('.pdetail-prev').style.display = p.imgs.length > 1 ? 'flex' : 'none';
-  document.querySelector('.pdetail-next').style.display = p.imgs.length > 1 ? 'flex' : 'none';
-  const propsHtml = Object.entries(p.props).map(([k, val]) =>
+  document.querySelector('.pdetail-prev').style.display = imgs.length > 1 ? 'flex' : 'none';
+  document.querySelector('.pdetail-next').style.display = imgs.length > 1 ? 'flex' : 'none';
+  const propsHtml = p.props ? Object.entries(p.props).map(([k, val]) =>
     '<div class="pdetail-prop"><strong>' + k + '</strong><span>' + val + '</span></div>'
-  ).join('');
+  ).join('') : '';
   document.getElementById('pdetailInfo').innerHTML =
     (p.badge ? '<div class="pdetail-badge">' + p.badge + '</div>' : '') +
     '<h2 class="pdetail-name">' + p.name + '</h2>' +
@@ -996,13 +1040,13 @@ function setupSwipe() {
 
 // addToCartById — přidá z PRODUCTS dat
 function addToCartById(btn, id) {
-  const p = PRODUCTS.find(x => x.id === id);
+  const p = PRODUCTS.find(x => x.id == id || x.id === id);
   if (!p) return;
   // close detail modal if open
   closePdetail();
   const existing = cart.find(i => i.id === id);
   if (existing) existing.qty++;
-  else cart.push({ id: p.id, name: p.name, price: p.price, img: p.imgs[0], qty: 1 });
+  else cart.push({ id: p.id, name: p.name, price: p.price, img: p.imgs ? p.imgs[0] : (p.img || ''), qty: 1 });
   updateCartBadge(); renderCart();
   showNotification(p.name + ' přidán/a do košíku');
   btn.textContent = '✓'; btn.style.background = '#3d2a26';
@@ -1407,3 +1451,4 @@ if (window.location.search.includes('order=cancel')) {
 
 </body>
 </html>
+
