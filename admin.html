@@ -208,8 +208,13 @@ body { font-family:'Jost',sans-serif; background:#f5f0ee; color:var(--text); }
         <textarea id="fDesc" placeholder="Krátký popis produktu..."></textarea>
       </div>
       <div class="form-group full">
-        <label>URL fotky</label>
-        <input type="url" id="fImg" placeholder="https://images.unsplash.com/..." oninput="previewImg()"/>
+        <label>Fotka produktu</label>
+        <input type="file" id="fImgFile" accept="image/*" style="display:none" onchange="uploadToCloudinary()"/>
+        <button type="button" class="upload-btn" onclick="document.getElementById('fImgFile').click()">
+          📷 Nahrát fotku z telefonu / PC
+        </button>
+        <p class="upload-progress" id="uploadProgress"></p>
+        <input type="url" id="fImg" placeholder="nebo vložte URL přímo..." oninput="previewImg()" style="margin-top:8px;"/>
         <img id="imgPreview" class="img-preview"/>
       </div>
       <div class="form-group">
@@ -432,6 +437,44 @@ window.showToast = showToast;
 document.getElementById('productModal').addEventListener('click', e => {
   if (e.target === document.getElementById('productModal')) closeModal();
 });
+
+// ── CLOUDINARY UPLOAD ──
+const CLOUDINARY_CLOUD = 'djsuckt4j';
+const CLOUDINARY_PRESET = 'rebe9ykh';
+
+async function uploadToCloudinary() {
+  const file = document.getElementById('fImgFile').files[0];
+  if (!file) return;
+
+  const progress = document.getElementById('uploadProgress');
+  const btn = document.querySelector('.upload-btn');
+  btn.disabled = true;
+  progress.textContent = '⏳ Nahrávám fotku...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+
+  try {
+    const res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.secure_url) {
+      document.getElementById('fImg').value = data.secure_url;
+      previewImg();
+      progress.textContent = '✅ Fotka nahrána!';
+      setTimeout(() => progress.textContent = '', 3000);
+    } else {
+      progress.textContent = '❌ Chyba: ' + (data.error?.message || 'Neznámá chyba');
+    }
+  } catch(e) {
+    progress.textContent = '❌ Chyba nahrávání: ' + e.message;
+  }
+  btn.disabled = false;
+}
+
 </script>
 </body>
 </html>
