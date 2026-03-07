@@ -444,15 +444,6 @@ footer { padding:56px 48px; background:var(--text); display:grid; grid-template-
   </div>
   <div class="products-grid" id="productsGrid">
 
-    <div class="product-card" data-cat="naramky" data-id="1" onclick="openProduct(1)">
-      <div class="product-img"><img src="https://images1.vinted.net/t/03_02138_EBeGRdZxFd12F28joLMDqsTS/f800/1745518082.webp?s=8be7efbd8d4f1898a4350dc3bef77b473f5d01e5" alt="Noční svit" loading="lazy"/><div class="product-badge">Nove</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
-      <div class="product-info"><h3 class="product-name">Noční svit</h3><p class="product-material">Noční svit · na míru</p><div class="product-bottom"><span class="product-price">249 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,1)">+</button></div></div>
-    </div>
-
-    <div class="product-card" data-cat="naramky" data-id="3" onclick="openProduct(3)">
-      <div class="product-img"><img src="https://images1.vinted.net/t/03_01eb1_Fs9BL1eZm6wMQ6vbpYa2LRoL/f800/1744146072.webp?s=f900a60a4e61dc7461d187a76032d75a606f2ac3" alt="Náramek Hamsa" loading="lazy"/><div class="product-badge">Nove</div><button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button></div>
-      <div class="product-info"><h3 class="product-name">Náramek Hamsa</h3><p class="product-material">Hamsa · na míru</p><div class="product-bottom"><span class="product-price">249 Kč</span><button class="product-add" onclick="event.stopPropagation();addToCartById(this,1)">+</button></div></div>
-    </div>
 
 </section>
 
@@ -1449,6 +1440,53 @@ if (window.location.search.includes('order=cancel')) {
 }
 </script>
 
+
+<script>
+async function loadProductsFromAPI() {
+  try {
+    const res = await fetch('/api/products-public');
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      PRODUCTS.length = 0;
+      data.forEach(p => PRODUCTS.push(p));
+    }
+  } catch(e) {
+    console.log('Firebase error:', e.message);
+  }
+  renderGrid();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('productsGrid');
+  if (!PRODUCTS.length) {
+    grid.innerHTML = '<p style="color:var(--text-light);text-align:center;padding:40px;grid-column:1/-1;">Žádné produkty k zobrazení.</p>';
+    return;
+  }
+  grid.innerHTML = PRODUCTS.map(function(p) {
+    var img = p.imgs ? p.imgs[0] : (p.img || '');
+    var id = p.id;
+    var badge = p.badge ? '<div class="product-badge">' + p.badge + '</div>' : '';
+    return '<div class="product-card" data-cat="' + p.cat + '" data-id="' + id + '" onclick="openProduct(\'' + id + '\')">'
+      + '<div class="product-img">'
+      + '<img src="' + img + '" alt="' + p.name + '" loading="lazy"/>'
+      + badge
+      + '<button class="product-wishlist" onclick="event.stopPropagation()">&#9825;</button>'
+      + '</div>'
+      + '<div class="product-info">'
+      + '<h3 class="product-name">' + p.name + '</h3>'
+      + '<p class="product-material">' + (p.material || '') + '</p>'
+      + '<div class="product-bottom">'
+      + '<span class="product-price">' + p.price + ' Kč</span>'
+      + '<button class="product-add" onclick="event.stopPropagation();addToCartById(this,\'' + id + '\')">+</button>'
+      + '</div></div></div>';
+  }).join('');
+  updateLoadMoreVisibility();
+  updateCollapseVisibility();
+}
+
+loadProductsFromAPI();
+
+</script>
 </body>
 </html>
-
